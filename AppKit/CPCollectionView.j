@@ -342,7 +342,8 @@
 /* @ignore */
 - (void)tile
 {
-    var width = CGRectGetWidth([self bounds]);
+    var width = CGRectGetWidth([self bounds]),
+        count = _items.length;
         
     if (![_content count] || width == _tileWidth)
         return;
@@ -356,6 +357,9 @@
     
     if (_maxNumberOfColumns > 0)
         _numberOfColumns = MIN(_maxNumberOfColumns, _numberOfColumns);
+        
+        if (_numberOfColumns > count)
+            _numberOfColumns = count
             
     var remaining = width - _numberOfColumns * itemSize.width,
         itemsNeedSizeUpdate = NO;
@@ -373,14 +377,12 @@
         itemsNeedSizeUpdate = YES;
     }
     
-    var index = 0,
-        count = _items.length;
+    var index = 0;
     
     if (_maxNumberOfColumns > 0 && _maxNumberOfRows > 0)
         count = MIN(count, _maxNumberOfColumns * _maxNumberOfRows);
     
     _numberOfRows = CEIL(count / _numberOfColumns);
-
     _horizontalMargin = FLOOR((width - _numberOfColumns * itemSize.width) / (_numberOfColumns + 1));
         
     var x = _horizontalMargin,
@@ -389,10 +391,10 @@
     for (; index < count; ++index)
     {
         if (index % _numberOfColumns == 0)
-        {
+        {   
             x = _horizontalMargin;
             y += _verticalMargin + itemSize.height;
-        }
+        } 
         
         var view = [_items[index] view];
         
@@ -400,7 +402,7 @@
         
         if (itemsNeedSizeUpdate)
             [view setFrameSize:_itemSize];
-            
+        
         x += itemSize.width + _horizontalMargin;
     }
     
