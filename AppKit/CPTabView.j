@@ -278,7 +278,6 @@
 	else if (aName == 'content-view') 
 	{
 		var view = [[CPView alloc] initWithFrame:CPRectMakeZero()];
-		[view setBackgroundColor:[CPColor yellowColor]];
 		return view;
 	}
 	
@@ -341,6 +340,48 @@
 }
 
 @end
+
+var CPTabViewItemsKey				= "CPTabViewItemsKey",
+	CPTabViewSelectedItemKey		= "CPTabViewSelectedItemKey",
+	CPTabViewTypeKey				= "CPTabViewTypeKey",
+	CPTabViewDelegateKey			= "CPTabViewDelegateKey";
+
+@implementation CPTabView (CPCoding)
+
+- (id)initWithCoder:(CPCoder)aCoder
+{
+	if (self = [super initWithCoder:aCoder])
+	{
+		_tabViewItems = [];
+		
+		var items = [aCoder decodeObjectForKey:CPTabViewItemsKey];
+		CPLog.debug(items);
+		for (var i = 0; items && i < items.length; i++)
+		{
+			[self insertTabViewItem:items[i] atIndex:i];
+		}
+		
+		var selected = [aCoder decodeObjectForKey:CPTabViewSelectedItemKey];
+		if (selected) { [self selectTabViewItem:selected] };
+		
+		[self setDelegate:[aCoder decodeObjectForKey:CPTabViewDelegateKey]];
+	}
+	
+	return self;
+}
+
+- (void)encodeWithCoder:(CPCoder)aCoder
+{
+	[super encodeWithCoder:aCoder];
+	
+	[aCoder encodeObject:_tabViewItems forKey:CPTabViewItemsKey];
+	[aCoder encodeObject:_selectedTabViewItem forKey:CPTabViewSelectedItemKey];
+
+	[aCoder encodeConditionalObject:_delegate forKey:CPTabViewDelegateKey];
+}
+
+@end
+
 
 @implementation CPSegmentedControl (CPTabView)
 
