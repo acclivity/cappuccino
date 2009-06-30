@@ -335,7 +335,7 @@
 	CGContextSetStrokeColor(context, [CPColor grayColor]);	
 	
 	var bounds = [self bounds]
-	CGContextStrokeRect(context, CPRectMake(0.5, 12.5, bounds.size.width - 0.5, bounds.size.height - 12.5));
+	CGContextStrokeRect(context, CPRectMake(0.5, 12.5, bounds.size.width, bounds.size.height - 12.0));
 	
 }
 
@@ -355,7 +355,6 @@ var CPTabViewItemsKey				= "CPTabViewItemsKey",
 		_tabViewItems = [];
 		
 		var items = [aCoder decodeObjectForKey:CPTabViewItemsKey];
-		CPLog.debug(items);
 		for (var i = 0; items && i < items.length; i++)
 		{
 			[self insertTabViewItem:items[i] atIndex:i];
