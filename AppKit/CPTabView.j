@@ -253,7 +253,7 @@
 	
 	if (aName == 'tabbar-view')
 	{
-		return CPRectMake(0.0, 3.0, bounds.size.width, bounds.size.height, 24.0);
+		return CPRectMake(0.0, 3.0, bounds.size.width, 24.0);
 		//return CPRectMake(CPRectGetMidX(bounds) - ( CPRectGetMidX(bounds) / 2 ), 0, bounds.size.width, 24.0);
 	}
 	else if (aName == 'content-view')
@@ -300,7 +300,7 @@
 	if ([_tabViewItems count] > 0)
 	{		
 		// Make sure there is always one item selected
-		if (!_selectedTabViewItem) { _selectedTabViewItem = [_tabViewItems objectAtIndex:0] };
+		if (!_selectedTabViewItem) _selectedTabViewItem = [_tabViewItems objectAtIndex:0];
 		
 		[theTabsView setSelectedSegment:[_tabViewItems indexOfObject:_selectedTabViewItem]];
 		
@@ -335,8 +335,7 @@
 	CGContextSetStrokeColor(context, [CPColor grayColor]);	
 	
 	var bounds = [self bounds]
-	CGContextStrokeRect(context, CPRectMake(0.5, 12.5, bounds.size.width, bounds.size.height - 12.0));
-	
+	CGContextStrokeRect(context, CPRectMake(0.5, 12.5, bounds.size.width, bounds.size.height - 12.0));	
 }
 
 @end
