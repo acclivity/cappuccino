@@ -334,7 +334,7 @@
 	CGContextSetStrokeColor(context, [CPColor colorWithRed:193.0 / 255.0 green:193.0 / 255.0 blue:193.0 / 255.0 alpha:1.0]);	
 	
 	var bounds = [self bounds]
-	CGContextStrokeRect(context, CPRectMake(0.0, 13.0, bounds.size.width - 1.5, bounds.size.height - 13.5));	
+	CGContextStrokeRect(context, CPRectMake(0.0, 13.0, bounds.size.width - 0.5, bounds.size.height - 13.5));	
 }
 
 @end
