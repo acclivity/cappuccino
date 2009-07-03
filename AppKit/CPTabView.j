@@ -1,3 +1,5 @@
+@import <AppKit/CPTabViewItem.j>
+
 @implementation CPTabView : CPView
 {
 	CPArray _tabViewItems;
