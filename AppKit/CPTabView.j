@@ -10,6 +10,7 @@
 	id _delegate;
 }
 
+// FIXME: Initiale with CPRectMakeZero()
 - (id)initWithFrame:(CPRect)frame
 {
 	self = [super initWithFrame:frame];
