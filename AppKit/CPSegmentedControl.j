@@ -428,9 +428,9 @@ CPSegmentSwitchTrackingMomentary = 2;
 }
 
 - (float)_leftOffsetForSegment:(unsigned)segment
-{
+{   
     var bezelInset = [self currentValueForThemeAttribute:@"bezel-inset"];
-
+    
     if (segment == 0)
         return bezelInset.left;
 
@@ -452,7 +452,17 @@ CPSegmentSwitchTrackingMomentary = 2;
     }
     else if (aName === "right-segment-bezel")
     {
-        return CGRectMake(CGRectGetMaxX(bounds) - contentInset.right - bezelInset.right, bezelInset.top, contentInset.right, height);
+        var lastSegmentIndex = [_segments count] - 1;
+        
+        if (lastSegmentIndex < 0)
+            lastSegmentIndex = 0;
+        
+        var lastSegmentLeftOffset = [self _leftOffsetForSegment:lastSegmentIndex];
+        
+        return CPRectMake(lastSegmentLeftOffset + [self widthForSegment:lastSegmentIndex] - contentInset.right, 
+                            bezelInset.top, 
+                            contentInset.right, 
+                            height);
     }
     else if (aName.substring(0, "segment-bezel".length) == "segment-bezel")
     {
