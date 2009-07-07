@@ -427,6 +427,18 @@ CPSegmentSwitchTrackingMomentary = 2;
     [self setNeedsDisplay:YES];
 }
 
+- (void)sizeToFit
+{       
+    if ([_segments count] <= 0)
+        return;
+    
+    var lastSegmentOffset = [self _leftOffsetForSegment:[self _indexOfLastSegment]],
+        lastSegmentWidth = [self widthForSegment:[self _indexOfLastSegment]];
+        size = CPSizeMake(lastSegmentOffset + lastSegmentWidth, [self currentValueForThemeAttribute:@"default-height"]);
+    
+    [self setFrameSize:size];
+}
+
 - (float)_leftOffsetForSegment:(unsigned)segment
 {   
     var bezelInset = [self currentValueForThemeAttribute:@"bezel-inset"];
@@ -437,6 +449,16 @@ CPSegmentSwitchTrackingMomentary = 2;
     var thickness = [self currentValueForThemeAttribute:@"divider-thickness"];
 
     return [self _leftOffsetForSegment:segment - 1] + [self widthForSegment:segment - 1] + thickness;
+}
+
+- (unsigned)_indexOfLastSegment
+{
+    var lastSegmentIndex = [_segments count] - 1;
+    
+    if (lastSegmentIndex < 0)
+        lastSegmentIndex = 0;
+        
+    return lastSegmentIndex;
 }
 
 - (CGRect)rectForEphemeralSubviewNamed:(CPString)aName
@@ -452,14 +474,9 @@ CPSegmentSwitchTrackingMomentary = 2;
     }
     else if (aName === "right-segment-bezel")
     {
-        var lastSegmentIndex = [_segments count] - 1;
+        var lastSegmentLeftOffset = [self _leftOffsetForSegment:[self _indexOfLastSegment]];
         
-        if (lastSegmentIndex < 0)
-            lastSegmentIndex = 0;
-        
-        var lastSegmentLeftOffset = [self _leftOffsetForSegment:lastSegmentIndex];
-        
-        return CPRectMake(lastSegmentLeftOffset + [self widthForSegment:lastSegmentIndex] - contentInset.right, 
+        return CPRectMake(lastSegmentLeftOffset + [self widthForSegment:[self _indexOfLastSegment]] - contentInset.right, 
                             bezelInset.top, 
                             contentInset.right, 
                             height);
