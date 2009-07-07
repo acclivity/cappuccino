@@ -327,6 +327,11 @@
 				     relativeToEphemeralSubviewNamed:@"content-view"];
 
 	[self _setupTabsView:tabsView withContentView:contentView];
+	
+	[tabsView sizeToFit];
+	
+	var frame = [tabsView frame];
+	[tabsView setFrameOrigin:CPPointMake(CPRectGetMidX([self bounds]) - CPRectGetMidX([tabsView bounds]), frame.origin.y)];
 }
 
 - (void)drawRect:(CPRect)rect
@@ -337,7 +342,8 @@
 	CGContextSetStrokeColor(context, [CPColor colorWithRed:193.0 / 255.0 green:193.0 / 255.0 blue:193.0 / 255.0 alpha:1.0]);	
 	
 	var bounds = [self bounds]
-	CGContextStrokeRect(context, CPRectMake(0.0, 13.0, bounds.size.width - 0.5, bounds.size.height - 13.5));	
+	CPLog.debug(CPStringFromRect(CPRectMake(0.5, 12.5, bounds.size.width - 1.0, bounds.size.height - 13.0)));
+	CGContextStrokeRect(context, CPRectMake(0.5, 12.5, bounds.size.width - 1.0, bounds.size.height - 13.0));	
 }
 
 @end
