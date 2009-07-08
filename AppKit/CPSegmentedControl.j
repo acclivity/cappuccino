@@ -526,6 +526,8 @@ CPSegmentSwitchTrackingMomentary = 2;
 
 - (void)layoutSubviews
 {
+	if (_segments.length <= 0) return;
+	
     var leftCapColor = [self valueForThemeAttribute:@"left-segment-bezel-color" 
                                             inState:_themeStates[0]];
 
