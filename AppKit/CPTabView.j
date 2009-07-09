@@ -43,8 +43,6 @@
 		_selectedTabViewItem = nil;
 		
 		_font = [CPFont systemFontOfSize:14]; // TODO: Implement fonts
-		
-		[self layoutSubviews];
 	}
 	
 	return self;
@@ -64,7 +62,7 @@
 	[_tabViewItems addObject:tabViewItem]
 	[self _notifyDelegateOfNumberOfItemsChange];
 	
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 - (void)insertTabViewItem:(CPTabViewItem)tabViewItem atIndex:(NSInteger)index
@@ -72,7 +70,7 @@
 	[_tabViewItems insertObject:tabViewItem atIndex:index];
 	[self _notifyDelegateOfNumberOfItemsChange];
 	
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 - (void)removeTabViewItem:(CPTabViewItem)tabViewItem
@@ -80,7 +78,7 @@
 	[_tabViewItems removeObject:tabViewItem];
 	[self _notifyDelegateOfNumberOfItemsChange];
 	
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 /* SELECTION */.
@@ -88,7 +86,7 @@
 {	
 	_selectedTabViewItem = tabViewItem;
 	
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 - (void)selectTabViewItemAtIndex:(NSInteger)index
