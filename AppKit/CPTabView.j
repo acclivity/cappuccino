@@ -1,5 +1,5 @@
 /*
- * CPSegmentedControl.j
+ * CPTabView.j
  * AppKit
  *
  * Created by Klaas Pieter Annema.
