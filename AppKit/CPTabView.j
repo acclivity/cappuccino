@@ -59,14 +59,12 @@
 
 - (void)addTabViewItem:(CPTabViewItem)tabViewItem
 {	
-	[_tabViewItems addObject:tabViewItem]
-	[self _notifyDelegateOfNumberOfItemsChange];
-	
-	[self setNeedsLayout];
+	[self insertTabViewItem:tabViewItem atIndex:[_tabViewItems count]];
 }
 
 - (void)insertTabViewItem:(CPTabViewItem)tabViewItem atIndex:(NSInteger)index
 {
+	[tabViewItem setTabView:self];
 	[_tabViewItems insertObject:tabViewItem atIndex:index];
 	[self _notifyDelegateOfNumberOfItemsChange];
 	
