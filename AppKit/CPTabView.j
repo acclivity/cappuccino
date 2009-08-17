@@ -405,7 +405,7 @@ var CPTabViewItemsKey				= "CPTabViewItemsKey",
 
 @end
 
-
+// This should probably be a subclass
 @implementation CPSegmentedControl (CPTabView)
 
 - (int)indexOfSelectedItem
