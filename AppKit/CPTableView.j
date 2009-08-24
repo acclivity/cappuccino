@@ -528,7 +528,7 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
         count = NUMBER_OF_COLUMNS();
 
     for (; index < count; ++index)
-        if ([_tableColumns identifier] === anIdentifier)
+        if ([[_tableColumns objectAtIndex:index] identifier] === anIdentifier)
             return index;
 
     return CPNotFound;
@@ -576,7 +576,12 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     return _selectedColumnIndexes;
 }
 
-- (void)selectedRowIndexes
+- (int)selectedRow
+{
+	return [_selectedRowIndexes lastIndex];
+}
+
+- (int)selectedRowIndexes
 {
     return _selectedRowIndexes;
 }
@@ -919,7 +924,12 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 
 - (void)_sizeToParent
 {
-    var superviewSize = [[self superview] bounds].size;
+	var superview = [self superview];
+	
+	if (!superview)
+		return;
+	
+    var superviewSize = [superview bounds].size;
 
     if (_dirtyTableColumnRangeIndex !== CPNotFound)
         [self _recalculateTableColumnRanges];
