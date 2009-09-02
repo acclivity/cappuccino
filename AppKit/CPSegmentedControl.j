@@ -457,7 +457,7 @@ CPSegmentSwitchTrackingMomentary = 2;
     
     if (lastSegmentIndex < 0)
         lastSegmentIndex = 0;
-        
+
     return lastSegmentIndex;
 }
 
@@ -475,10 +475,10 @@ CPSegmentSwitchTrackingMomentary = 2;
     else if (aName === "right-segment-bezel")
     {
         var lastSegmentLeftOffset = [self _leftOffsetForSegment:[self _indexOfLastSegment]];
-        
-        return CPRectMake(lastSegmentLeftOffset + [self widthForSegment:[self _indexOfLastSegment]] - contentInset.right, 
-                            bezelInset.top, 
-                            contentInset.right, 
+
+        return CPRectMake(lastSegmentLeftOffset + [self widthForSegment:[self _indexOfLastSegment]] - contentInset.right,
+                            bezelInset.top,
+                            contentInset.right,
                             height);
     }
     else if (aName.substring(0, "segment-bezel".length) == "segment-bezel")
@@ -526,8 +526,9 @@ CPSegmentSwitchTrackingMomentary = 2;
 
 - (void)layoutSubviews
 {
-	if (_segments.length <= 0) return;
-	
+    if (_segments.length <= 0)
+        return;
+
     var leftCapColor = [self valueForThemeAttribute:@"left-segment-bezel-color" 
                                             inState:_themeStates[0]];
 

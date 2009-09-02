@@ -27,11 +27,11 @@
 @import "CGGeometry.j"
 
 @import "CPColor.j"
-@import "CPDOMDisplayServer.j"
 @import "CPGeometry.j"
 @import "CPGraphicsContext.j"
 @import "CPResponder.j"
 @import "CPTheme.j"
+@import "_CPDisplayServer.j"
 
 
 #include "Platform/Platform.h"
@@ -94,11 +94,12 @@ var DOMElementPrototype         = nil,
     BackgroundTrivialColor              = 0,
     BackgroundVerticalThreePartImage    = 1,
     BackgroundHorizontalThreePartImage  = 2,
-    BackgroundNinePartImage             = 3,
-    
-    CustomDrawRectViews                 = {},
-    CustomLayoutSubviewsViews           = {};
+    BackgroundNinePartImage             = 3;
 #endif
+
+var CPViewFlags                     = { },
+    CPViewHasCustomDrawRect         = 1 << 0,
+    CPViewHasCustomLayoutSubviews   = 1 << 1;
 
 /*! 
     @ingroup appkit
@@ -184,6 +185,8 @@ var DOMElementPrototype         = nil,
     // Key View Support
     CPView              _nextKeyView;
     CPView              _previousKeyView;
+
+    unsigned            _viewClassFlags;
 }
 
 /*
@@ -207,6 +210,27 @@ var DOMElementPrototype         = nil,
 #endif
 
     CachedNotificationCenter = [CPNotificationCenter defaultCenter];
+}
+
+- (void)setupViewFlags
+{
+    var theClass = [self class],
+        classUID = [theClass UID];
+
+    if (CPViewFlags[classUID] === undefined)
+    {
+        var flags = 0;
+
+        if ([theClass instanceMethodForSelector:@selector(drawRect:)] !== [CPView instanceMethodForSelector:@selector(drawRect:)])
+            flags |= CPViewHasCustomDrawRect;
+
+        if ([theClass instanceMethodForSelector:@selector(layoutSubviews)] !== [CPView instanceMethodForSelector:@selector(layoutSubviews)])
+            flags |= CPViewHasCustomLayoutSubviews;
+
+        CPViewFlags[classUID] = flags;
+    }
+
+    _viewClassFlags = CPViewFlags[classUID];
 }
 
 + (CPSet)keyPathsForValuesAffectingFrame
@@ -250,7 +274,7 @@ var DOMElementPrototype         = nil,
 
 #if PLATFORM(DOM)
         _DOMElement = DOMElementPrototype.cloneNode(false);
-        
+
         CPDOMDisplayServerSetStyleLeftTop(_DOMElement, NULL, _CGRectGetMinX(aFrame), _CGRectGetMinY(aFrame));
         CPDOMDisplayServerSetStyleSize(_DOMElement, width, height);
         
@@ -260,6 +284,8 @@ var DOMElementPrototype         = nil,
         
         _theme = [CPTheme defaultTheme];
         _themeState = CPThemeStateNormal;
+
+        [self setupViewFlags];
 
         [self _loadThemeAttributes];
     }
@@ -1536,10 +1562,6 @@ setBoundsOrigin:
 {
     if (aFlag)
         [self setNeedsDisplayInRect:[self bounds]];
-#if PLATFORM(DOM)
-    else
-        CPDOMDisplayServerRemoveView(self);
-#endif
 }
 
 /*!
@@ -1548,31 +1570,18 @@ setBoundsOrigin:
 */
 - (void)setNeedsDisplayInRect:(CPRect)aRect
 {
-#if PLATFORM(DOM)
-    var UID = [[self class] UID],
-        hasCustomDrawRect = CustomDrawRectViews[UID];
-    
-    if (!hasCustomDrawRect && typeof hasCustomDrawRect === "undefined")
-    {
-        hasCustomDrawRect = [self methodForSelector:@selector(drawRect:)] != [CPView instanceMethodForSelector:@selector(drawRect:)];
-        CustomDrawRectViews[UID] = hasCustomDrawRect;
-    }
-
-    if (!hasCustomDrawRect)
+    if (!(_viewClassFlags & CPViewHasCustomDrawRect))
         return;
-#endif
-        
+
     if (_CGRectIsEmpty(aRect))
         return;
-    
+
     if (_dirtyRect && !_CGRectIsEmpty(_dirtyRect))
         _dirtyRect = CGRectUnion(aRect, _dirtyRect);
     else
         _dirtyRect = _CGRectMakeCopy(aRect);
 
-#if PLATFORM(DOM)
-    CPDOMDisplayServerAddView(self);
-#endif
+    _CPDisplayServerAddDisplayObject(self);
 }
 
 - (BOOL)needsDisplay
@@ -1677,26 +1686,12 @@ setBoundsOrigin:
 
 - (void)setNeedsLayout
 {
-    _needsLayout = YES;
-    
-#if PLATFORM(DOM)
-    var UID = [[self class] UID],
-        hasCustomLayoutSubviews = CustomLayoutSubviewsViews[UID];
-    
-    if (hasCustomLayoutSubviews === undefined)
-    {
-        hasCustomLayoutSubviews = [self methodForSelector:@selector(layoutSubviews)] != [CPView instanceMethodForSelector:@selector(layoutSubviews)];
-        CustomLayoutSubviewsViews[UID] = hasCustomLayoutSubviews;
-    }
-
-    if (!hasCustomLayoutSubviews)
+    if (!(_viewClassFlags & CPViewHasCustomLayoutSubviews))
         return;
 
-    if (_needsLayout)
-    {
-        CPDOMDisplayServerAddView(self);
-    }
-#endif
+    _needsLayout = YES;
+
+    _CPDisplayServerAddLayoutObject(self);
 }
 
 - (void)layoutIfNeeded
@@ -2335,6 +2330,8 @@ var CPViewAutoresizingMaskKey       = @"CPViewAutoresizingMask",
 
         [self setBackgroundColor:[aCoder decodeObjectForKey:CPViewBackgroundColorKey]];
 
+        [self setupViewFlags];
+
         _theme = [CPTheme defaultTheme];
         _themeState = CPThemeState([aCoder decodeIntForKey:CPViewThemeStateKey]);
         _themeAttributes = {};
@@ -2450,6 +2447,7 @@ var _CPViewGetTransform = function(/*CPView*/ fromView, /*CPView */ toView)
     {
         var view = fromView;
         
+        // FIXME: This doesn't handle the case when the outside views are equal.
         // If we have a fromView, "climb up" the view tree until 
         // we hit the root node or we hit the toLayer.
         while (view && view != toView)
