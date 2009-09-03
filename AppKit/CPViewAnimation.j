@@ -30,6 +30,9 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 	return self;
 }
 
+// =============
+// = ANIMATION =
+// =============
 - (void)startAnimation
 {
 	var animationIndex = [_viewAnimations count];
@@ -38,12 +41,12 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 	{
 		var dictionary = [_viewAnimations objectAtIndex:animationIndex];
 		
-		var view = [dictionary valueForKey:CPViewAnimationTargetKey],
-			startFrame = [dictionary valueForKey:CPViewAnimationStartFrameKey];
+		var view = [self _targetView:dictionary],
+			startFrame = [self _startFrame:dictionary];
 			
 		[view setFrame:startFrame];
 		
-		var effect = [dictionary valueForKey:CPViewAnimationEffectKey];
+		var effect = [self _effect:dictionary];
 		
 		if (effect === CPViewAnimationFadeInEffect)
 			[view setAlphaValue:0.0];
@@ -64,9 +67,9 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 		var dictionary = [_viewAnimations objectAtIndex:animationIndex];
 		
 		// Update the view's frame
-		var view = [dictionary valueForKey:CPViewAnimationTargetKey],
-			startFrame = [dictionary valueForKey:CPViewAnimationStartFrameKey],
-			endFrame = [dictionary valueForKey:CPViewAnimationEndFrameKey],
+		var view = [self _targetView:dictionary]
+			startFrame = [self _startFrame:dictionary]
+			endFrame = [self _endFrame:dictionary]
 			differenceFrame = CPRectMakeZero();
 			
 		differenceFrame.origin.x = endFrame.origin.x - startFrame.origin.x;
@@ -83,12 +86,15 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 		[view setFrame:intermediateFrame];
 		
 		// Update the view's alpha value
-		var effect = [dictionary valueForKey:CPViewAnimationEffectKey];
+		var effect = [self _effect:dictionary];
 		
 		if (effect === CPViewAnimationFadeInEffect)
 			[view setAlphaValue:1.0 * progress];
 		else if (effect === CPViewAnimationFadeOutEffect)
-			[view setAlphaValue:1.0 + ( 0.0 - 1.0 ) * progress ];
+			[view setAlphaValue:1.0 + ( 0.0 - 1.0 ) * progress];
+			
+		if (progress === 1.0)
+			[view setHidden:CPRectIsNull(endFrame) || [view alphaValue] === 0.0];
 	}
 }
 
@@ -99,22 +105,65 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 	{
 		var dictionary = [_viewAnimations objectAtIndex:animationIndex];
 		
-		var view = [dictionary valueForKey:CPViewAnimationTargetKey];
-			endFrame = [dictionary valueForKey:CPViewAnimationEndFrameKey];
+		var view = [self _targetView:dictionary],
+			endFrame = [self _endFrame:dictionary];
 			
 		[view setFrame:endFrame];
 		
-		var effect = [dictionary valueForKey:CPViewAnimationEffectKey];
+		var effect = [self _effect:dictionary];
 		
 		if (effect === CPViewAnimationFadeInEffect)
 			[view setAlphaValue:1.0];
 		else if (effect === CPViewAnimationFadeOutEffect)
 			[view setAlphaValue:0.0];
+			
+		[view setHidden:CPRectIsNull(endFrame) || [view alphaValue] === 0.0];
 	}
 	
 	[super stopAnimation];
 }
 
+// ===============
+// = CONVENIENCE =
+// ===============
+- (id)_targetView:(CPDictionary)dictionary
+{
+	var targetView = [dictionary valueForKey:CPViewAnimationTargetKey];
+	
+	if (!targetView)
+		[CPException raise:CPInternalInconsistencyException reason:[CPString stringWithFormat:@"view animation: %@ does not have a target view", [dictionary description]]];
+		
+	return targetView;
+}
+
+- (CPRect)_startFrame:(CPDictionary)dictionary
+{
+	var startFrame = [dictionary valueForKey:CPViewAnimationStartFrameKey];
+	
+	if (!startFrame)
+		return [[self _targetView:dictionary] frame];
+	
+	return startFrame;
+}
+
+- (CPRect)_endFrame:(CPDictionary)dictionary
+{
+	var endFrame = [dictionary valueForKey:CPViewAnimationEndFrameKey];
+	
+	if (!endFrame)
+		return [[self _targetView:dictionary] frame];
+		
+	return endFrame;
+}
+
+- (CPString)_effect:(CPDictionary)dictionary
+{
+	return [dictionary valueForKey:CPViewAnimationEffectKey];
+}
+
+// =============
+// = ACCESSORS =
+// =============
 - (CPArray)viewAnimations
 {
 	return _viewAnimations;
@@ -123,11 +172,7 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 - (void)setViewAnimations:(CPArray)viewAnimations
 {
 	if (viewAnimations != _viewAnimations)
-	{
-		
-		window.console.log(viewAnimations);
 		_viewAnimations = viewAnimations;
-	}
 }
 
 @end
