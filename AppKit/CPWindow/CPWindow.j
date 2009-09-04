@@ -1799,6 +1799,8 @@ CPTexturedBackgroundWindowMask
 {
     if (_autorecalculatesKeyViewLoop)
         _keyViewLoopIsDirty = YES;
+
+    _keyViewLoopIsDirty = NO;
 }
 
 - (BOOL)_hasKeyViewLoop
