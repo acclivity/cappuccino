@@ -172,7 +172,10 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 - (void)setViewAnimations:(CPArray)viewAnimations
 {
 	if (viewAnimations != _viewAnimations)
+	{
+		[self stopAnimation];
 		_viewAnimations = [viewAnimations copy];
+	}
 }
 
 @end
