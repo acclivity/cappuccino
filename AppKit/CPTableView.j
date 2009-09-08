@@ -1310,6 +1310,9 @@ _cachedDataViews[dataView.identifier].push(dataView);
             [dataView setFrame:_CGRectMake(tableColumnRange.location, _CGRectGetMinY(rectOfRow), tableColumnRange.length, _CGRectGetHeight(rectOfRow))];
             [dataView setObjectValue:[self _objectValueForTableColumn:tableColumn row:row]];
 
+			if (_implementedDelegateMethods & CPTableViewDelegate_tableView_willDisplayView_forTableColumn_row_)
+				[_delegate tableView:self willDisplayView:dataView forTableColumn:tableColumn row:row];
+				
             if ([dataView superview] !== self)
                 [self addSubview:dataView];
 
