@@ -213,7 +213,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 {
     if (!CPTextFieldDOMInputElement)
     {
-        CPTextFieldDOMInputElement = document.createElement("input");
+        CPTextFieldDOMInputElement = document.createElement("textarea");
         CPTextFieldDOMInputElement.style.position = "absolute";
         CPTextFieldDOMInputElement.style.border = "0px";
         CPTextFieldDOMInputElement.style.padding = "0px";
