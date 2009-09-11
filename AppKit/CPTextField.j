@@ -967,6 +967,10 @@ var CPTextFieldIsEditableKey            = "CPTextFieldIsEditableKey",
     if (self)
     {
         [self setEditable:[aCoder decodeBoolForKey:CPTextFieldIsEditableKey]];
+		
+		if (![self isEditable])
+			[self setValue:CPLineBreakByWordWrapping forThemeAttribute:@"line-break-mode"];
+
         [self setSelectable:[aCoder decodeBoolForKey:CPTextFieldIsSelectableKey]];
 
         [self setDrawsBackground:[aCoder decodeBoolForKey:CPTextFieldDrawsBackgroundKey]];
