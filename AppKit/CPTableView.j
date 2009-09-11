@@ -258,6 +258,14 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 
 //Loading Data
 
+- (void)reloadDataForRowIndexes:(CPIndexSet)rowIndexes columnIndexes:(CPIndexSet)columnIndexes
+{
+    [self reloadData];
+//    [_previouslyExposedRows removeIndexes:rowIndexes];
+//    [_previouslyExposedColumns removeIndexes:columnIndexes];
+}
+
+
 - (void)reloadData
 {
     if (!_dataSource)
@@ -885,10 +893,10 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     return row;
 }
 
-- (CGRect)frameOfDataViewAtColumn:(CPInteger)aColumnIndex row:(CPInteger)aRowIndex
+- (CGRect)frameOfDataViewAtColumn:(CPInteger)aColumn row:(CPInteger)aRow
 {
-    var tableColumnRange = _tableColumns[aColumnIndex],
-        rectOfRow = [self rectOfRow:aRowIndex];
+    var tableColumnRange = _tableColumnRanges[aColumn],
+        rectOfRow = [self rectOfRow:aRow];
 
     return _CGRectMake(tableColumnRange.location, _CGRectGetMinY(rectOfRow), tableColumnRange.length, _CGRectGetHeight(rectOfRow));
 }
@@ -1283,10 +1291,8 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
                 dataView = _dataViewsForTableColumns[tableColumnUID][row];
 
             _dataViewsForTableColumns[tableColumnUID][row] = nil;
-if (!_cachedDataViews[dataView.identifier])
-_cachedDataViews[dataView.identifier] = [dataView];
-else
-_cachedDataViews[dataView.identifier].push(dataView);
+
+            [self _enqueueReusableDataView:dataView];
         }
     }
 }
@@ -1312,9 +1318,9 @@ _cachedDataViews[dataView.identifier].push(dataView);
     {
         var column = columnArray[columnIndex],
             tableColumn = _tableColumns[column],
-            tableColumnUID = [tableColumn UID],
+            tableColumnUID = [tableColumn UID];/*,
             tableColumnRange = _tableColumnRanges[column];
-
+*/
     if (!_dataViewsForTableColumns[tableColumnUID])
         _dataViewsForTableColumns[tableColumnUID] = [];
 
@@ -1324,13 +1330,9 @@ _cachedDataViews[dataView.identifier].push(dataView);
         for (; rowIndex < rowsCount; ++rowIndex)
         {
             var row = rowArray[rowIndex],
-                dataView = [tableColumn _newDataViewForRow:row],
-                rectOfRow = rowRects[row];
+                dataView = [self _newDataViewForRow:row tableColumn:tableColumn];
 
-            if (!rectOfRow)
-                rectOfRow = rowRects[row] = [self rectOfRow:row];
-
-            [dataView setFrame:_CGRectMake(tableColumnRange.location, _CGRectGetMinY(rectOfRow), tableColumnRange.length, _CGRectGetHeight(rectOfRow))];
+            [dataView setFrame:[self frameOfDataViewAtColumn:column row:row]];
             [dataView setObjectValue:[self _objectValueForTableColumn:tableColumn row:row]];
 
 			if (_implementedDelegateMethods & CPTableViewDelegate_tableView_willDisplayView_forTableColumn_row_)
@@ -1342,6 +1344,22 @@ _cachedDataViews[dataView.identifier].push(dataView);
             _dataViewsForTableColumns[tableColumnUID][row] = dataView;
         }
     }
+}
+
+- (CPView)_newDataViewForRow:(CPInteger)aRow tableColumn:(CPTableColumn)aTableColumn
+{
+    return [aTableColumn _newDataViewForRow:aRow];
+}
+
+- (void)_enqueueReusableDataView:(CPView)aDataView
+{
+    // FIXME: yuck!
+    var identifier = aDataView.identifier;
+
+    if (!_cachedDataViews[identifier])
+        _cachedDataViews[identifier] = [aDataView];
+    else
+        _cachedDataViews[identifier].push(aDataView);
 }
 
 - (void)setFrameSize:(CGSize)aSize
