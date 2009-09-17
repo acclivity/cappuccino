@@ -213,7 +213,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 {
     if (!CPTextFieldDOMInputElement)
     {
-        CPTextFieldDOMInputElement = document.createElement("textarea");
+        CPTextFieldDOMInputElement = document.createElement("input");
         CPTextFieldDOMInputElement.style.position = "absolute";
         CPTextFieldDOMInputElement.style.border = "0px";
         CPTextFieldDOMInputElement.style.padding = "0px";
@@ -967,10 +967,6 @@ var CPTextFieldIsEditableKey            = "CPTextFieldIsEditableKey",
     if (self)
     {
         [self setEditable:[aCoder decodeBoolForKey:CPTextFieldIsEditableKey]];
-		
-		if (![self isEditable])
-			[self setValue:CPLineBreakByWordWrapping forThemeAttribute:@"line-break-mode"];
-
         [self setSelectable:[aCoder decodeBoolForKey:CPTextFieldIsSelectableKey]];
 
         [self setDrawsBackground:[aCoder decodeBoolForKey:CPTextFieldDrawsBackgroundKey]];
