@@ -707,7 +707,7 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     if (_headerView)
     {
         [_headerView setTableView:self];
-        [_headerView setFrameSize:_CGSizeMake(aSize.width, [_headerView frame].size.height)];
+        [_headerView setFrameSize:_CGSizeMake(_CGRectGetWidth([self frame]), _CGRectGetHeight([_headerView frame]))];
     }
 
     var scrollView = [[self superview] superview];
@@ -895,6 +895,8 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 
 - (CGRect)frameOfDataViewAtColumn:(CPInteger)aColumn row:(CPInteger)aRow
 {
+    UPDATE_COLUMN_RANGES_IF_NECESSARY();
+
     var tableColumnRange = _tableColumnRanges[aColumn],
         rectOfRow = [self rectOfRow:aRow];
 
@@ -1318,9 +1320,8 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     {
         var column = columnArray[columnIndex],
             tableColumn = _tableColumns[column],
-            tableColumnUID = [tableColumn UID];/*,
-            tableColumnRange = _tableColumnRanges[column];
-*/
+            tableColumnUID = [tableColumn UID];
+
     if (!_dataViewsForTableColumns[tableColumnUID])
         _dataViewsForTableColumns[tableColumnUID] = [];
 
@@ -1367,7 +1368,7 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     [super setFrameSize:aSize];
 
     if (_headerView)
-        [_headerView setFrameSize:_CGSizeMake(aSize.width, [_headerView frame].size.height)];
+        [_headerView setFrameSize:_CGSizeMake(_CGRectGetWidth([self frame]), _CGRectGetHeight([_headerView frame]))];
 }
 
 - (CGRect)exposedClipRect
@@ -1650,6 +1651,8 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     else
         _selectionAnchorRow = row;
 
+    _previouslySelectedRowIndexes = nil;
+
     [self _updateSelectionWithMouseAtRow:row];
 
     return YES;
@@ -1663,26 +1666,9 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 }
 
 - (void)stopTracking:(CGPoint)lastPoint at:(CGPoint)aPoint mouseIsUp:(BOOL)mouseIsUp
-{/*
-    _clickedRow = [self rowAtPoint:point];
-    _clickedColumn = [self columnAtPoint:point];
-
-    if ([anEvent clickCount] === 2)
-    {
-        CPLog.warn("edit?!");
-
-        [self sendAction:_doubleAction to:_target];
-    }
-    else
-    {
-        if (![_previousSelectedRowIndexes isEqualToIndexSet:_selectedRowIndexes])
-        {
-            [[CPNotificationCenter defaultCenter] postNotificationName:CPTableViewSelectionDidChangeNotification object:self userInfo:nil];
-        }
-
-        [self sendAction:_action to:_target];
-    }
-*/
+{
+    if (![_previouslySelectedRowIndexes isEqualToIndexSet:_selectedRowIndexes])
+        [self _noteSelectionDidChange];
 }
 
 - (void)_updateSelectionWithMouseAtRow:(CPInteger)aRow
@@ -1751,10 +1737,26 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     if ([newSelection isEqualToIndexSet:_selectedRowIndexes])
         return;
 
+    if (!_previouslySelectedRowIndexes)
+        _previouslySelectedRowIndexes = [_selectedRowIndexes copy];
+
     [self selectRowIndexes:newSelection byExtendingSelection:NO];
 
+    [self _noteSelectionIsChanging];
+}
+
+- (void)_noteSelectionIsChanging
+{
     [[CPNotificationCenter defaultCenter]
         postNotificationName:CPTableViewSelectionIsChangingNotification
+                      object:self
+                    userInfo:nil];
+}
+
+- (void)_noteSelectionDidChange
+{
+    [[CPNotificationCenter defaultCenter]
+        postNotificationName:CPTableViewSelectionDidChangeNotification
                       object:self
                     userInfo:nil];
 }
@@ -1774,26 +1776,60 @@ var CPTableViewDataSourceKey        = @"CPTableViewDataSourceKey",
 
 - (id)initWithCoder:(CPCoder)aCoder
 {
-    //FIXME:!!!!
-    [self init];
-    
     self = [super initWithCoder:aCoder];
 
     if (self)
     {
-        _dataSource = [aCoder decodeObjectForKey:CPTableViewDataSourceKey];
-        _delegate = [aCoder decodeObjectForKey:CPTableViewDelegateKey];
-        
-        _rowHeight = [aCoder decodeFloatForKey:CPTableViewRowHeightKey];
-        _intercellSpacing = [aCoder decodeSizeForKey:CPTableViewIntercellSpacingKey];
-    
+        //Configuring Behavior
+        _allowsColumnReordering = YES;
+        _allowsColumnResizing = YES;
         _allowsMultipleSelection = [aCoder decodeBoolForKey:CPTableViewMultipleSelectionKey];
         _allowsEmptySelection = [aCoder decodeBoolForKey:CPTableViewEmptySelectionKey];
-        
-        _tableColumns = [aCoder decodeObjectForKey:CPTableViewTableColumnsKey];
+        _allowsColumnSelection = NO;
 
+        _tableViewFlags = 0;
+
+        //Setting Display Attributes
+        _selectionHighlightMask = CPTableViewSelectionHighlightStyleRegular;
+
+        [self setUsesAlternatingRowBackgroundColors:NO];
+        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithHexString:@"e4e7ff"]]];
+
+        _tableColumns = [aCoder decodeObjectForKey:CPTableViewTableColumnsKey];
         [_tableColumns makeObjectsPerformSelector:@selector(setTableView:) withObject:self];
+
+        _tableColumnRanges = [];
         _dirtyTableColumnRangeIndex = 0;
+        _numberOfHiddenColumns = 0;
+
+        _objectValues = { };
+        _dataViewsForTableColumns = { };
+        _dataViews=  [];
+        _numberOfRows = 0;
+        _exposedRows = [CPIndexSet indexSet];
+        _exposedColumns = [CPIndexSet indexSet];
+        _cachedDataViews = { };
+        _rowHeight = [aCoder decodeFloatForKey:CPTableViewRowHeightKey];
+        _intercellSpacing = [aCoder decodeSizeForKey:CPTableViewIntercellSpacingKey];
+
+        [self setGridColor:[CPColor grayColor]];
+        [self setGridStyleMask:CPTableViewGridNone];
+
+        _headerView = [[CPTableHeaderView alloc] initWithFrame:CGRectMake(0, 0, [self bounds].size.width, _rowHeight)];
+
+        [_headerView setTableView:self];
+
+        _cornerView = [[_CPCornerView alloc] initWithFrame:CGRectMake(0, 0, [CPScroller scrollerWidth], CGRectGetHeight([_headerView frame]))];
+
+        _selectedColumnIndexes = [CPIndexSet indexSet];
+        _selectedRowIndexes = [CPIndexSet indexSet];
+
+        [self setDataSource:[aCoder decodeObjectForKey:CPTableViewDataSourceKey]];
+        [self setDelegate:[aCoder decodeObjectForKey:CPTableViewDelegateKey]];
+
+        _tableDrawView = [[_CPTableDrawView alloc] initWithTableView:self];
+        [_tableDrawView setBackgroundColor:[CPColor clearColor]];
+        [self addSubview:_tableDrawView];
 
         [self viewWillMoveToSuperview:[self superview]];
     }
