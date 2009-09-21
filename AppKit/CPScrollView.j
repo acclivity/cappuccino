@@ -672,15 +672,33 @@
 */
 - (void)scrollWheel:(CPEvent)anEvent
 {
-   var documentFrame = [[self documentView] frame],
-       contentBounds = [_contentView bounds];
+	var contentBounds = [_contentView bounds];
 
-    contentBounds.origin.x += [anEvent deltaX] * _horizontalLineScroll;
-    contentBounds.origin.y += [anEvent deltaY] * _verticalLineScroll;
+	if (![_horizontalScroller isHidden])
+		contentBounds.origin.x = ROUND(contentBounds.origin.x + [anEvent deltaX] * _horizontalLineScroll);
+		
+	if (![_verticalScroller isHidden])
+		contentBounds.origin.y = ROUND(contentBounds.origin.y + [anEvent deltaY] * _verticalLineScroll);
+	
+    [_contentView scrollToPoint:CPPointCreateCopy(contentBounds.origin)];
+    [_headerClipView scrollToPoint:CPPointMake(contentBounds.origin.x, 0.0)];
 
-    [_contentView scrollToPoint:contentBounds.origin];
-    [_headerClipView scrollToPoint:CGPointMake(contentBounds.origin.x, 0.0)];
-}
+	var documentFrame = [[self documentView] frame],
+		enclosingScrollView = [self enclosingScrollView],
+		enclosingContentView = [enclosingScrollView contentView],
+		enclosingContentBounds = [enclosingContentView bounds];
+
+	if (enclosingContentBounds === nil)
+		return;
+
+	if ([_horizontalScroller isHidden] || contentBounds.origin.x <= 0 || contentBounds.origin.x >= documentFrame.size.width - _bounds.size.width)
+		enclosingContentBounds.origin.x = ROUND(enclosingContentBounds.origin.x + [anEvent deltaX] * _horizontalLineScroll);
+		
+	if ([_verticalScroller isHidden] || contentBounds.origin.y <= 0 || contentBounds.origin.y >= documentFrame.size.height - _bounds.size.height)
+		enclosingContentBounds.origin.y = ROUND(enclosingContentBounds.origin.y + [anEvent deltaY] * _verticalLineScroll);
+	
+	[enclosingContentView scrollToPoint:enclosingContentBounds.origin];
+	[[enclosingScrollView _headerView] scrollToPoint:CGPointMake(enclosingContentBounds.origin.x, 0.0)];
 
 - (void)keyDown:(CPEvent)anEvent
 {
