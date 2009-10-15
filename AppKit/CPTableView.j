@@ -258,6 +258,14 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 
 //Loading Data
 
+- (void)reloadDataForRowIndexes:(CPIndexSet)rowIndexes columnIndexes:(CPIndexSet)columnIndexes
+{
+    [self reloadData];
+//    [_previouslyExposedRows removeIndexes:rowIndexes];
+//    [_previouslyExposedColumns removeIndexes:columnIndexes];
+}
+
+
 - (void)reloadData
 {
     if (!_dataSource)
@@ -474,7 +482,7 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     if ([aTableColumn tableView] !== self)
         return;
 
-    var index = [_tableColumns indeOfObjectIdenticalTo:aTableColumn];
+    var index = [_tableColumns indexOfObjectIdenticalTo:aTableColumn];
 
     if (index === CPNotFound)
         return;
@@ -671,7 +679,15 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 
 - (void)setCornerView:(CPView)aView
 {
+    if (_cornerView === aView)
+        return;
+
     _cornerView = aView;
+
+    var scrollView = [[self superview] superview];
+
+    if ([scrollView isKindOfClass:[CPScrollView class]] && [scrollView documentView] === self)
+        [scrollView _updateCornerAndHeaderView];
 }
 
 - (CPView)headerView
@@ -681,8 +697,23 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 
 - (void)setHeaderView:(CPView)aHeaderView
 {
+    if (_headerView === aHeaderView)
+        return;
+
+    [_headerView setTableView:nil];
+
     _headerView = aHeaderView;
-    [_headerView setTableView:self];
+
+    if (_headerView)
+    {
+        [_headerView setTableView:self];
+        [_headerView setFrameSize:_CGSizeMake(_CGRectGetWidth([self frame]), _CGRectGetHeight([_headerView frame]))];
+    }
+
+    var scrollView = [[self superview] superview];
+
+    if ([scrollView isKindOfClass:[CPScrollView class]] && [scrollView documentView] === self)
+        [scrollView _updateCornerAndHeaderView];
 }
 
 //Layout Support
@@ -862,10 +893,12 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     return row;
 }
 
-- (CGRect)frameOfDataViewAtColumn:(CPInteger)aColumnIndex row:(CPInteger)aRowIndex
+- (CGRect)frameOfDataViewAtColumn:(CPInteger)aColumn row:(CPInteger)aRow
 {
-    var tableColumnRange = _tableColumns[aColumnIndex],
-        rectOfRow = [self rectOfRow:aRowIndex];
+    UPDATE_COLUMN_RANGES_IF_NECESSARY();
+
+    var tableColumnRange = _tableColumnRanges[aColumn],
+        rectOfRow = [self rectOfRow:aRow];
 
     return _CGRectMake(tableColumnRange.location, _CGRectGetMinY(rectOfRow), tableColumnRange.length, _CGRectGetHeight(rectOfRow));
 }
@@ -1260,10 +1293,8 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
                 dataView = _dataViewsForTableColumns[tableColumnUID][row];
 
             _dataViewsForTableColumns[tableColumnUID][row] = nil;
-if (!_cachedDataViews[dataView.identifier])
-_cachedDataViews[dataView.identifier] = [dataView];
-else
-_cachedDataViews[dataView.identifier].push(dataView);
+
+            [self _enqueueReusableDataView:dataView];
         }
     }
 }
@@ -1289,8 +1320,7 @@ _cachedDataViews[dataView.identifier].push(dataView);
     {
         var column = columnArray[columnIndex],
             tableColumn = _tableColumns[column],
-            tableColumnUID = [tableColumn UID],
-            tableColumnRange = _tableColumnRanges[column];
+            tableColumnUID = [tableColumn UID];
 
     if (!_dataViewsForTableColumns[tableColumnUID])
         _dataViewsForTableColumns[tableColumnUID] = [];
@@ -1301,15 +1331,14 @@ _cachedDataViews[dataView.identifier].push(dataView);
         for (; rowIndex < rowsCount; ++rowIndex)
         {
             var row = rowArray[rowIndex],
-                dataView = [tableColumn _newDataViewForRow:row],
-                rectOfRow = rowRects[row];
+                dataView = [self _newDataViewForRow:row tableColumn:tableColumn];
 
-            if (!rectOfRow)
-                rectOfRow = rowRects[row] = [self rectOfRow:row];
-
-            [dataView setFrame:_CGRectMake(tableColumnRange.location, _CGRectGetMinY(rectOfRow), tableColumnRange.length, _CGRectGetHeight(rectOfRow))];
+            [dataView setFrame:[self frameOfDataViewAtColumn:column row:row]];
             [dataView setObjectValue:[self _objectValueForTableColumn:tableColumn row:row]];
 
+			if (_implementedDelegateMethods & CPTableViewDelegate_tableView_willDisplayView_forTableColumn_row_)
+				[_delegate tableView:self willDisplayView:dataView forTableColumn:tableColumn row:row];
+				
             if ([dataView superview] !== self)
                 [self addSubview:dataView];
 
@@ -1318,10 +1347,28 @@ _cachedDataViews[dataView.identifier].push(dataView);
     }
 }
 
+- (CPView)_newDataViewForRow:(CPInteger)aRow tableColumn:(CPTableColumn)aTableColumn
+{
+    return [aTableColumn _newDataViewForRow:aRow];
+}
+
+- (void)_enqueueReusableDataView:(CPView)aDataView
+{
+    // FIXME: yuck!
+    var identifier = aDataView.identifier;
+
+    if (!_cachedDataViews[identifier])
+        _cachedDataViews[identifier] = [aDataView];
+    else
+        _cachedDataViews[identifier].push(aDataView);
+}
+
 - (void)setFrameSize:(CGSize)aSize
 {
     [super setFrameSize:aSize];
-    [_headerView setFrameSize:CGSizeMake(aSize.width, [_headerView frame].size.height)];
+
+    if (_headerView)
+        [_headerView setFrameSize:_CGSizeMake(_CGRectGetWidth([self frame]), _CGRectGetHeight([_headerView frame]))];
 }
 
 - (CGRect)exposedClipRect
@@ -1604,6 +1651,8 @@ _cachedDataViews[dataView.identifier].push(dataView);
     else
         _selectionAnchorRow = row;
 
+    _previouslySelectedRowIndexes = nil;
+
     [self _updateSelectionWithMouseAtRow:row];
 
     return YES;
@@ -1617,26 +1666,9 @@ _cachedDataViews[dataView.identifier].push(dataView);
 }
 
 - (void)stopTracking:(CGPoint)lastPoint at:(CGPoint)aPoint mouseIsUp:(BOOL)mouseIsUp
-{/*
-    _clickedRow = [self rowAtPoint:point];
-    _clickedColumn = [self columnAtPoint:point];
-
-    if ([anEvent clickCount] === 2)
-    {
-        CPLog.warn("edit?!");
-
-        [self sendAction:_doubleAction to:_target];
-    }
-    else
-    {
-        if (![_previousSelectedRowIndexes isEqualToIndexSet:_selectedRowIndexes])
-        {
-            [[CPNotificationCenter defaultCenter] postNotificationName:CPTableViewSelectionDidChangeNotification object:self userInfo:nil];
-        }
-
-        [self sendAction:_action to:_target];
-    }
-*/
+{
+    if (![_previouslySelectedRowIndexes isEqualToIndexSet:_selectedRowIndexes])
+        [self _noteSelectionDidChange];
 }
 
 - (void)_updateSelectionWithMouseAtRow:(CPInteger)aRow
@@ -1705,10 +1737,26 @@ _cachedDataViews[dataView.identifier].push(dataView);
     if ([newSelection isEqualToIndexSet:_selectedRowIndexes])
         return;
 
+    if (!_previouslySelectedRowIndexes)
+        _previouslySelectedRowIndexes = [_selectedRowIndexes copy];
+
     [self selectRowIndexes:newSelection byExtendingSelection:NO];
 
+    [self _noteSelectionIsChanging];
+}
+
+- (void)_noteSelectionIsChanging
+{
     [[CPNotificationCenter defaultCenter]
         postNotificationName:CPTableViewSelectionIsChangingNotification
+                      object:self
+                    userInfo:nil];
+}
+
+- (void)_noteSelectionDidChange
+{
+    [[CPNotificationCenter defaultCenter]
+        postNotificationName:CPTableViewSelectionDidChangeNotification
                       object:self
                     userInfo:nil];
 }
@@ -1728,26 +1776,60 @@ var CPTableViewDataSourceKey        = @"CPTableViewDataSourceKey",
 
 - (id)initWithCoder:(CPCoder)aCoder
 {
-    //FIXME:!!!!
-    [self init];
-    
     self = [super initWithCoder:aCoder];
 
     if (self)
     {
-        _dataSource = [aCoder decodeObjectForKey:CPTableViewDataSourceKey];
-        _delegate = [aCoder decodeObjectForKey:CPTableViewDelegateKey];
-        
-        _rowHeight = [aCoder decodeFloatForKey:CPTableViewRowHeightKey];
-        _intercellSpacing = [aCoder decodeSizeForKey:CPTableViewIntercellSpacingKey];
-    
+        //Configuring Behavior
+        _allowsColumnReordering = YES;
+        _allowsColumnResizing = YES;
         _allowsMultipleSelection = [aCoder decodeBoolForKey:CPTableViewMultipleSelectionKey];
         _allowsEmptySelection = [aCoder decodeBoolForKey:CPTableViewEmptySelectionKey];
-        
-        _tableColumns = [aCoder decodeObjectForKey:CPTableViewTableColumnsKey];
+        _allowsColumnSelection = NO;
 
+        _tableViewFlags = 0;
+
+        //Setting Display Attributes
+        _selectionHighlightMask = CPTableViewSelectionHighlightStyleRegular;
+
+        [self setUsesAlternatingRowBackgroundColors:NO];
+        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithHexString:@"e4e7ff"]]];
+
+        _tableColumns = [aCoder decodeObjectForKey:CPTableViewTableColumnsKey];
         [_tableColumns makeObjectsPerformSelector:@selector(setTableView:) withObject:self];
+
+        _tableColumnRanges = [];
         _dirtyTableColumnRangeIndex = 0;
+        _numberOfHiddenColumns = 0;
+
+        _objectValues = { };
+        _dataViewsForTableColumns = { };
+        _dataViews=  [];
+        _numberOfRows = 0;
+        _exposedRows = [CPIndexSet indexSet];
+        _exposedColumns = [CPIndexSet indexSet];
+        _cachedDataViews = { };
+        _rowHeight = [aCoder decodeFloatForKey:CPTableViewRowHeightKey];
+        _intercellSpacing = [aCoder decodeSizeForKey:CPTableViewIntercellSpacingKey];
+
+        [self setGridColor:[CPColor grayColor]];
+        [self setGridStyleMask:CPTableViewGridNone];
+
+        _headerView = [[CPTableHeaderView alloc] initWithFrame:CGRectMake(0, 0, [self bounds].size.width, _rowHeight)];
+
+        [_headerView setTableView:self];
+
+        _cornerView = [[_CPCornerView alloc] initWithFrame:CGRectMake(0, 0, [CPScroller scrollerWidth], CGRectGetHeight([_headerView frame]))];
+
+        _selectedColumnIndexes = [CPIndexSet indexSet];
+        _selectedRowIndexes = [CPIndexSet indexSet];
+
+        [self setDataSource:[aCoder decodeObjectForKey:CPTableViewDataSourceKey]];
+        [self setDelegate:[aCoder decodeObjectForKey:CPTableViewDelegateKey]];
+
+        _tableDrawView = [[_CPTableDrawView alloc] initWithTableView:self];
+        [_tableDrawView setBackgroundColor:[CPColor clearColor]];
+        [self addSubview:_tableDrawView];
 
         [self viewWillMoveToSuperview:[self superview]];
     }

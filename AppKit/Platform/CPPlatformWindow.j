@@ -4,7 +4,6 @@
 #import "Platform.h"
 #import "../CoreGraphics/CGGeometry.h"
 
-
 var PrimaryPlatformWindow   = NULL;
 
 @implementation CPPlatformWindow : CPObject
@@ -13,6 +12,7 @@ var PrimaryPlatformWindow   = NULL;
 
     CPInteger       _level;
     BOOL            _hasShadow;
+    unsigned        _shadowStyle;
 
 #if PLATFORM(DOM)
     DOMWindow       _DOMWindow;
@@ -116,36 +116,9 @@ var PrimaryPlatformWindow   = NULL;
     if (!aRect || _CGRectEqualToRect(_contentRect, aRect))
         return;
 
-    [self setContentOrigin:aRect.origin];
-    [self setContentSize:aRect.size];
-}
+    _contentRect = _CGRectMakeCopy(aRect);
 
-- (void)setContentOrigin:(CGPoint)aPoint
-{
-    var origin = _contentRect.origin;
-
-    if (!aPoint || _CGPointEqualToPoint(origin, aPoint))
-        return;
-
-    origin.x = aPoint.x;
-    origin.y = aPoint.y;
-
-    [self updateNativeContentOrigin];
-}
-
-- (void)setContentSize:(CGSize)aSize
-{
-    var size = _contentRect.size;
-
-    if (!aSize || _CGSizeEqualToSize(size, aSize))
-        return;
-
-    var delta = _CGSizeMake(aSize.width - size.width, aSize.height - size.height);
-
-    size.width = aSize.width;
-    size.height = aSize.height;
-
-    [self updateNativeContentSize];
+    [self updateNativeContentRect];
 }
 
 - (void)updateFromNativeContentRect
@@ -176,6 +149,22 @@ var PrimaryPlatformWindow   = NULL;
 #endif
 }
 
+- (void)deminiaturize:(id)sender
+{
+#if PLATFORM(DOM)
+    if (_DOMWindow && typeof _DOMWindow["cpDeminiaturize"] === "function")
+        _DOMWindow.cpDeminiaturize();
+#endif
+}
+
+- (void)miniaturize:(id)sender
+{
+#if PLATFORM(DOM)
+    if (_DOMWindow && typeof _DOMWindow["cpMiniaturize"] === "function")
+        _DOMWindow.cpMiniaturize();
+#endif
+}
+
 - (void)setLevel:(CPInteger)aLevel
 {
     _level = aLevel;
@@ -193,6 +182,16 @@ var PrimaryPlatformWindow   = NULL;
 #if PLATFORM(DOM)
     if (_DOMWindow && _DOMWindow.cpSetHasShadow)
         _DOMWindow.cpSetHasShadow(shouldHaveShadow);
+#endif
+}
+
+- (void)setShadowStyle:(int)aStyle
+{
+    _shadowStyle = aStyle;
+
+#if PLATFORM(DOM)
+    if (_DOMWindow && _DOMWindow.cpSetShadowStyle)
+        _shadowStyle.cpSetShadowStyle(aStyle);
 #endif
 }
 

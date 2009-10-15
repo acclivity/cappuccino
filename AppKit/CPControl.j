@@ -293,6 +293,15 @@ var CPControlBlackColor     = [CPColor blackColor];
     _previousTrackingLocation = currentLocation;
 }
 
+- (void)setState:(int)state
+{
+}
+
+- (int)nextState
+{
+    return 0;
+}
+
 - (void)performClick:(id)sender 
 {
     [self highlight:YES];

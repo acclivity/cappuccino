@@ -28,6 +28,7 @@
 
 @import "CPDOMWindowLayer.j"
 
+@import "CPPlatform.j"
 @import "CPPlatformWindow.j"
 
 #import "../../CoreGraphics/CGGeometry.h"
@@ -59,7 +60,8 @@ ExcludedDOMElements["OPTION"]    = YES;
 
 // Define up here so compressor knows about em.
 var CPDOMEventGetClickCount,
-    CPDOMEventStop;
+    CPDOMEventStop,
+    StopDOMEventPropagation;
 
 //right now we hard code q, w, r and t as keys to propogate
 //these aren't normal keycodes, they are with modifier key codes
@@ -69,6 +71,8 @@ var KeyCodesToPrevent = {},
     KeyCodesWithoutKeyPressEvents = { '8':1, '9':1, '16':1, '37':1, '38':1, '39':1, '40':1, '46':1, '33':1, '34':1 };
 
 var CTRL_KEY_CODE   = 17;
+
+var supportsNativeDragAndDrop = [CPPlatform supportsDragAndDrop];
 
 @implementation CPPlatformWindow (DOM)
 
@@ -124,32 +128,29 @@ var CTRL_KEY_CODE   = 17;
     return contentRect;
 }
 
-- (void)updateNativeContentOrigin
+- (void)updateNativeContentRect
 {
     if (!_DOMWindow)
         return;
 
-    if (_DOMWindow.cpSetFrame)
+    if (typeof _DOMWindow["cpSetFrame"] === "function")
         return _DOMWindow.cpSetFrame([self contentRect]);
 
     var origin = [self contentRect].origin,
         nativeOrigin = [self nativeContentRect].origin;
 
-    _DOMWindow.moveBy(origin.x - nativeOrigin.x, origin.y - nativeOrigin.y);
-}
-
-- (void)updateNativeContentSize
-{
-    if (!_DOMWindow)
-        return;
-
-    if (_DOMWindow.cpSetFrame)
-        return _DOMWindow.cpSetFrame([self contentRect]);
+    if (origin.x !== nativeOrigin.x || origin.y !== nativeOrigin.y)
+    {
+        _DOMWindow.moveBy(origin.x - nativeOrigin.x, origin.y - nativeOrigin.y);
+    }
 
     var size = [self contentRect].size,
         nativeSize = [self nativeContentRect].size;
 
-    _DOMWindow.resizeBy(size.width - nativeSize.width, size.height - nativeSize.height);
+    if (size.width !== nativeSize.width || size.height !== nativeSize.height)
+    {
+        _DOMWindow.resizeBy(size.width - nativeSize.width, size.height - nativeSize.height);
+    }
 }
 
 - (void)orderBack:(id)aSender
@@ -333,8 +334,10 @@ var CTRL_KEY_CODE   = 17;
 
     if (![CPPlatform isBrowser])
     {
+        _DOMWindow.cpSetFrame(_contentRect);
         _DOMWindow.cpSetLevel(_level);
         _DOMWindow.cpSetHasShadow(_hasShadow);
+        _DOMWindow.cpSetShadowStyle(_shadowStyle);
     }
 
     [self registerDOMWindow];
@@ -376,11 +379,11 @@ var CTRL_KEY_CODE   = 17;
 
         aDOMEvent.dataTransfer.setDragImage(DOMDragElement, draggingOffset.width, draggingOffset.height);
 
-        [dragServer draggingStartedInPlatformWindow:self location:[CPPlatform isBrowser] ? location : _CGPointMake(aDOMEvent.screenX, aDOMEvent.screenY)];
+        [dragServer draggingStartedInPlatformWindow:self globalLocation:[CPPlatform isBrowser] ? location : _CGPointMake(aDOMEvent.screenX, aDOMEvent.screenY)];
     }
 
     else if (type === "drag")
-        [dragServer draggingSourceUpdatedWithLocation:[CPPlatform isBrowser] ? location : _CGPointMake(aDOMEvent.screenX, aDOMEvent.screenY)];
+        [dragServer draggingSourceUpdatedWithGlobalLocation:[CPPlatform isBrowser] ? location : _CGPointMake(aDOMEvent.screenX, aDOMEvent.screenY)];
 
     else if (type === "dragover" || type === "dragleave")
     {
@@ -403,7 +406,7 @@ var CTRL_KEY_CODE   = 17;
     }
 
     else if (type === "dragend")
-        [dragServer draggingEndedInPlatformWindow:self];
+        [dragServer draggingEndedInPlatformWindow:self globalLocation:[CPPlatform isBrowser] ? location : _CGPointMake(aDOMEvent.screenX, aDOMEvent.screenY)];
 
     else //if (type === "drop")
     {
@@ -825,14 +828,16 @@ var CTRL_KEY_CODE   = 17;
         event = _CPEventFromNativeMouseEvent(aDOMEvent, _mouseIsDown ? CPLeftMouseDragged : CPMouseMoved, location, modifierFlags, timestamp, windowNumber, nil, -1, 1, 0);
     }
 
-    if (event)
+    var isDragging = [[CPDragServer sharedDragServer] isDragging];
+
+    if (event && (!isDragging || !supportsNativeDragAndDrop))
     {
         event._DOMEvent = aDOMEvent;
         
         [CPApp sendEvent:event];
     }
 
-    if (StopDOMEventPropagation && (![CPPlatform supportsDragAndDrop] || type !== "mousedown" && ![[CPDragServer sharedDragServer] isDragging]))
+    if (StopDOMEventPropagation && (!supportsNativeDragAndDrop || type !== "mousedown" && !isDragging))
         CPDOMEventStop(aDOMEvent, self);
 
     [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];

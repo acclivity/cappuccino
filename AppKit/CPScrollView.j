@@ -39,6 +39,7 @@
 {
     CPClipView  _contentView;
     CPClipView  _headerClipView;
+    CPView      _cornerView;
 
     BOOL        _hasVerticalScroller;
     BOOL        _hasHorizontalScroller;
@@ -140,13 +141,9 @@
 - (void)setDocumentView:(CPView)aView
 {
     [_contentView setDocumentView:aView];
-    [_headerClipView setDocumentView:[self _headerView]];
 
-    var cornerView = [self _cornerView];
-
-    if (cornerView)
-        [self addSubview:cornerView];
-
+    // FIXME: This should be observed.
+    [self _updateCornerAndHeaderView];
     [self reflectScrolledClipView:_contentView];
 }
 
@@ -189,7 +186,7 @@
 
     var documentFrame = [documentView frame], // the size of the whole document
         contentFrame = [self bounds], // assume it takes up the entire size of the scrollview (no scrollers)
-        headerClipViewFrame = [self headerClipViewFrame],
+        headerClipViewFrame = [self _headerClipViewFrame],
         headerClipViewHeight = _CGRectGetHeight(headerClipViewFrame);
 
     contentFrame.origin.y += headerClipViewHeight;
@@ -238,7 +235,7 @@
 
     if (shouldShowVerticalScroller)
     {
-        var verticalScrollerY = MAX(_CGRectGetHeight([self cornerViewFrame]), headerClipViewHeight),
+        var verticalScrollerY = MAX(_CGRectGetHeight([self _cornerViewFrame]), headerClipViewHeight),
             verticalScrollerHeight = _CGRectGetHeight([self bounds]) - verticalScrollerY;
 
         if (shouldShowHorizontalScroller)
@@ -268,7 +265,7 @@
 
     [_contentView setFrame:contentFrame];
     [_headerClipView setFrame:headerClipViewFrame];
-    [[self _cornerView] setFrame:[self cornerViewFrame]];
+    [_cornerView setFrame:[self _cornerViewFrame]];
 
     --_recursionCount;
 }
@@ -423,54 +420,67 @@
     return _autohidesScrollers;
 }
 
+- (void)_updateCornerAndHeaderView
+{
+    var documentView = [self documentView],
+        currentHeaderView = [self _headerView],
+        documentHeaderView = [documentView respondsToSelector:@selector(headerView)] ? [documentView headerView] : nil;
+
+    if (currentHeaderView !== documentHeaderView)
+    {
+        [currentHeaderView removeFromSuperview];
+        [_headerClipView setDocumentView:documentHeaderView];
+    }
+
+    var documentCornerView = [documentView respondsToSelector:@selector(cornerView)] ? [documentView cornerView] : nil;
+
+    if (_cornerView !== documentCornerView)
+    {
+        [_cornerView removeFromSuperview];
+
+        _cornerView = documentCornerView;
+
+        if (_cornerView)
+            [self addSubview:_cornerView];
+    }
+
+    [self reflectScrolledClipView:_contentView];
+}
+
 - (CPView)_headerView
 {
-    var documentView = [self documentView];
-    
-    if ([documentView respondsToSelector:@selector(headerView)])
-        return [documentView headerView];
+    var headerClipViewSubviews = [_headerClipView subviews];
 
-    return nil;
+    return [headerClipViewSubviews count] ? headerClipViewSubviews[0] : nil;
 }
 
-- (CPView)_cornerView
+- (CGRect)_cornerViewFrame
 {
-    var documentView = [self documentView];
-
-    if ([documentView respondsToSelector:@selector(cornerView)])
-        return [documentView cornerView];
-}
-
-- (CGRect)cornerViewFrame
-{
-    var cornerView = [self _cornerView],
-        cornerBounds = [cornerView bounds],
-        bounds = [self bounds];
-
-    if (!cornerView)
+    if (!_cornerView)
         return _CGRectMakeZero();
 
-    cornerBounds.origin.x = CGRectGetMaxX(bounds) - CGRectGetWidth(cornerBounds);
-    cornerBounds.origin.y = 0;
+    var bounds = [self bounds],
+        frame = [_cornerView frame];
 
-    return cornerBounds;
+    frame.origin.x = _CGRectGetMaxX(bounds) - _CGRectGetWidth(frame);
+    frame.origin.y = 0;
+
+    return frame;
 }
 
-- (CGRect)headerClipViewFrame
+- (CGRect)_headerClipViewFrame
 {
-    var headerView = [self _headerView],
-        cornerView = [self _cornerView],
-        bounds = [self bounds];
+    var headerView = [self _headerView];
 
     if (!headerView)
         return _CGRectMakeZero();
 
-    bounds.size.height = [headerView bounds].size.height;
+    var frame = [self bounds];
 
-    if (cornerView)
-        bounds.size.width -= CGRectGetWidth([cornerView bounds]);
+    frame.size.height = _CGRectGetHeight([headerView frame]);
+    frame.size.width -= _CGRectGetWidth([self _cornerViewFrame]);
 
-    return bounds;
+    return frame;
 }
 
 /* @ignore */
@@ -496,7 +506,8 @@
         
         case CPScrollerKnobSlot:
         case CPScrollerKnob:
-        default:                        contentBounds.origin.y = value * (_CGRectGetHeight(documentFrame) - _CGRectGetHeight(contentBounds));
+                                        // We want integral bounds!
+        default:                        contentBounds.origin.y = ROUND(value * (_CGRectGetHeight(documentFrame) - _CGRectGetHeight(contentBounds)));
     }
     
     [_contentView scrollToPoint:contentBounds.origin];
@@ -525,7 +536,8 @@
         
         case CPScrollerKnobSlot:
         case CPScrollerKnob:
-        default:                        contentBounds.origin.x = value * (_CGRectGetWidth(documentFrame) - _CGRectGetWidth(contentBounds));
+                                        // We want integral bounds!
+        default:                        contentBounds.origin.x = ROUND(value * (_CGRectGetWidth(documentFrame) - _CGRectGetWidth(contentBounds)));
     }
 
     [_contentView scrollToPoint:contentBounds.origin];
@@ -662,14 +674,33 @@
 */
 - (void)scrollWheel:(CPEvent)anEvent
 {
-   var documentFrame = [[self documentView] frame],
-       contentBounds = [_contentView bounds];
+	var contentBounds = [_contentView bounds];
 
-    contentBounds.origin.x += [anEvent deltaX] * _horizontalLineScroll;
-    contentBounds.origin.y += [anEvent deltaY] * _verticalLineScroll;
+	if (![_horizontalScroller isHidden])
+		contentBounds.origin.x = ROUND(contentBounds.origin.x + [anEvent deltaX] * _horizontalLineScroll);
+		
+	if (![_verticalScroller isHidden])
+		contentBounds.origin.y = ROUND(contentBounds.origin.y + [anEvent deltaY] * _verticalLineScroll);
+	
+    [_contentView scrollToPoint:CPPointCreateCopy(contentBounds.origin)];
+    [_headerClipView scrollToPoint:CPPointMake(contentBounds.origin.x, 0.0)];
 
-    [_contentView scrollToPoint:contentBounds.origin];
-    [_headerClipView scrollToPoint:CGPointMake(contentBounds.origin.x, 0.0)];
+	var documentFrame = [[self documentView] frame],
+		enclosingScrollView = [self enclosingScrollView],
+		enclosingContentView = [enclosingScrollView contentView],
+		enclosingContentBounds = [enclosingContentView bounds];
+
+	if (enclosingContentBounds === nil)
+		return;
+
+	if ([_horizontalScroller isHidden] || contentBounds.origin.x <= 0 || contentBounds.origin.x >= documentFrame.size.width - _bounds.size.width)
+		enclosingContentBounds.origin.x = ROUND(enclosingContentBounds.origin.x + [anEvent deltaX] * _horizontalLineScroll);
+		
+	if ([_verticalScroller isHidden] || contentBounds.origin.y <= 0 || contentBounds.origin.y >= documentFrame.size.height - _bounds.size.height)
+		enclosingContentBounds.origin.y = ROUND(enclosingContentBounds.origin.y + [anEvent deltaY] * _verticalLineScroll);
+	
+	[enclosingContentView scrollToPoint:enclosingContentBounds.origin];
+	[[enclosingScrollView _headerView] scrollToPoint:CGPointMake(enclosingContentBounds.origin.x, 0.0)];
 }
 
 - (void)keyDown:(CPEvent)anEvent
@@ -745,6 +776,9 @@ var CPScrollViewContentViewKey = "CPScrollViewContentView",
         _hasHorizontalScroller  = [aCoder decodeBoolForKey:CPScrollViewHasHScrollerKey];
         _autohidesScrollers     = [aCoder decodeBoolForKey:CPScrollViewAutohidesScrollerKey];
         
+        _headerClipView = [[CPClipView alloc] init];
+        [self addSubview:_headerClipView];
+
         // Do to the anything goes nature of decoding, our subviews may not exist yet, so layout at the end of the run loop when we're sure everything is in a correct state.
         [[CPRunLoop currentRunLoop] performSelector:@selector(reflectScrolledClipView:) target:self argument:_contentView order:0 modes:[CPDefaultRunLoopMode]];
     }
