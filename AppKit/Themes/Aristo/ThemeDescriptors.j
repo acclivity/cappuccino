@@ -115,11 +115,20 @@
                 [_CPCibCustomResource imageResourceWithName:"button-bezel-center.png" size:CGSizeMake(1.0, 24.0)],
                 [_CPCibCustomResource imageResourceWithName:"popup-bezel-right.png" size:CGSizeMake(27.0, 24.0)]
             ]
-        isVertical:NO]];
+        isVertical:NO]],
+
+		disabledColor = [CPColor colorWithPatternImage:[[CPThreePartImage alloc] initWithImageSlices:
+			[
+				[_CPCibCustomResource imageResourceWithName:@"button-bezel-disabled-left.png" size:CPSizeMake(4.0, 24.0)],
+				[_CPCibCustomResource imageResourceWithName:@"button-bezel-disabled-center.png" size:CPSizeMake(1.0, 24.0)],
+				[_CPCibCustomResource imageResourceWithName:@"popup-bezel-disabled-right.png" size:CPSizeMake(27.0, 24.0)]
+			]
+		isVertical:NO]];
     
     [button setTitle:@"Pop Up"];
     
     [button setValue:color forThemeAttribute:@"bezel-color" inState:CPThemeStateBordered];
+	[button setValue:disabledColor forThemeAttribute:@"bezel-color" inState:CPThemeStateBordered | CPThemeStateDisabled];
     [button setValue:CGInsetMake(0, 27.0 + 5.0, 0, 5.0) forThemeAttribute:@"content-inset" inState:CPThemeStateBordered];
     [button setValue:[CPFont boldSystemFontOfSize:12.0] forThemeAttribute:@"font"];
     [button setValue:[CPColor colorWithCalibratedWhite:79.0 / 255.0 alpha:1.0] forThemeAttribute:@"text-color"];
