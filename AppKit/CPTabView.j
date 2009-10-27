@@ -1,3 +1,25 @@
+/*
+ * CPTabView.j
+ * AppKit
+ *
+ * Created by Klaas Pieter Annema.
+ * Copyright 2008, 280 North, Inc.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 @import <AppKit/CPTabViewItem.j>
 
 @implementation CPTabView : CPView
@@ -21,8 +43,6 @@
 		_selectedTabViewItem = nil;
 		
 		_font = [CPFont systemFontOfSize:14]; // TODO: Implement fonts
-		
-		[self layoutSubviews];
 	}
 	
 	return self;
@@ -39,18 +59,16 @@
 
 - (void)addTabViewItem:(CPTabViewItem)tabViewItem
 {	
-	[_tabViewItems addObject:tabViewItem]
-	[self _notifyDelegateOfNumberOfItemsChange];
-	
-	[self layoutSubviews];
+	[self insertTabViewItem:tabViewItem atIndex:[_tabViewItems count]];
 }
 
 - (void)insertTabViewItem:(CPTabViewItem)tabViewItem atIndex:(NSInteger)index
 {
+	[tabViewItem setTabView:self];
 	[_tabViewItems insertObject:tabViewItem atIndex:index];
 	[self _notifyDelegateOfNumberOfItemsChange];
 	
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 - (void)removeTabViewItem:(CPTabViewItem)tabViewItem
@@ -58,7 +76,7 @@
 	[_tabViewItems removeObject:tabViewItem];
 	[self _notifyDelegateOfNumberOfItemsChange];
 	
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 /* SELECTION */.
@@ -66,7 +84,7 @@
 {	
 	_selectedTabViewItem = tabViewItem;
 	
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 - (void)selectTabViewItemAtIndex:(NSInteger)index
@@ -327,6 +345,11 @@
 				     relativeToEphemeralSubviewNamed:@"content-view"];
 
 	[self _setupTabsView:tabsView withContentView:contentView];
+	
+	[tabsView sizeToFit];
+	
+	var frame = [tabsView frame];
+	[tabsView setFrameOrigin:CPPointMake(CPRectGetMidX([self bounds]) - CPRectGetMidX([tabsView bounds]), frame.origin.y)];
 }
 
 - (void)drawRect:(CPRect)rect
@@ -337,7 +360,7 @@
 	CGContextSetStrokeColor(context, [CPColor colorWithRed:193.0 / 255.0 green:193.0 / 255.0 blue:193.0 / 255.0 alpha:1.0]);	
 	
 	var bounds = [self bounds]
-	CGContextStrokeRect(context, CPRectMake(0.0, 13.0, bounds.size.width - 0.5, bounds.size.height - 13.5));	
+	CGContextStrokeRect(context, CPRectMake(0.5, 12.5, bounds.size.width - 1.0, bounds.size.height - 13.0));	
 }
 
 @end
@@ -382,7 +405,7 @@ var CPTabViewItemsKey				= "CPTabViewItemsKey",
 
 @end
 
-
+// This should probably be a subclass
 @implementation CPSegmentedControl (CPTabView)
 
 - (int)indexOfSelectedItem

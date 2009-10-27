@@ -427,10 +427,22 @@ CPSegmentSwitchTrackingMomentary = 2;
     [self setNeedsDisplay:YES];
 }
 
-- (float)_leftOffsetForSegment:(unsigned)segment
-{
-    var bezelInset = [self currentValueForThemeAttribute:@"bezel-inset"];
+- (void)sizeToFit
+{       
+    if ([_segments count] <= 0)
+        return;
+    
+    var lastSegmentOffset = [self _leftOffsetForSegment:[self _indexOfLastSegment]],
+        lastSegmentWidth = [self widthForSegment:[self _indexOfLastSegment]];
+        size = CPSizeMake(lastSegmentOffset + lastSegmentWidth, [self currentValueForThemeAttribute:@"default-height"]);
+    
+    [self setFrameSize:size];
+}
 
+- (float)_leftOffsetForSegment:(unsigned)segment
+{   
+    var bezelInset = [self currentValueForThemeAttribute:@"bezel-inset"];
+    
     if (segment == 0)
         return bezelInset.left;
 
@@ -442,7 +454,7 @@ CPSegmentSwitchTrackingMomentary = 2;
 - (unsigned)_indexOfLastSegment
 {
     var lastSegmentIndex = [_segments count] - 1;
-
+    
     if (lastSegmentIndex < 0)
         lastSegmentIndex = 0;
 
