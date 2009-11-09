@@ -80,8 +80,14 @@ CPTableColumnUserResizingMask   = 2;
         _maxWidth = 1000000.0;
 
         [self setIdentifier:anIdentifier];
-        [self setHeaderView:[CPTextField new]];
-        [self setDataView:[CPTextField new]];
+        
+        var headerView = [[_CPTableColumnHeaderView alloc] initWithFrame:CGRectMakeZero()];
+        [self setHeaderView:headerView];
+        
+        var textDataView = [CPTextField new];
+        [textDataView setValue:[CPColor whiteColor] forThemeAttribute:@"text-color" inState:CPThemeStateHighlighted];
+        [textDataView setValue:[CPFont boldSystemFontOfSize:12] forThemeAttribute:@"font" inState:CPThemeStateHighlighted];
+        [self setDataView:textDataView];
     }
 
     return self;
@@ -267,6 +273,7 @@ return x.pop();
     // unarchive the data view cache
     var newDataView = [CPKeyedUnarchiver unarchiveObjectWithData:_dataViewData[dataViewUID]];
 newDataView.identifier = dataViewUID;
+
     return newDataView;
 }
 
@@ -377,7 +384,6 @@ var CPTableColumnIdentifierKey   = @"CPTableColumnIdentifierKey",
         [self setHeaderView:[CPTextField new]];
         [self setDataView:[CPTextField new]];
 
-
     //    _resizingMask  = [aCoder decodeBoolForKey:CPTableColumnResizingMaskKey];
     }
 
@@ -405,25 +411,25 @@ var CPTableColumnIdentifierKey   = @"CPTableColumnIdentifierKey",
 - (void)setHeaderCell:(CPView)aView
 {
     [CPException raise:CPUnsupportedMethodException
-                reason:@"setHeaderCell: is not supported. -setHeaderCell:aView instead."];
+                reason:@"setHeaderCell: is not supported. Use -setHeaderView:aView instead."];
 }
 
 - (CPView)headerCell
 {
     [CPException raise:CPUnsupportedMethodException
-                reason:@"headCell is not supported. -headerView instead."];
+                reason:@"headerCell is not supported. Use -headerView instead."];
 }
 
 - (void)setDataCell:(CPView)aView
 {
     [CPException raise:CPUnsupportedMethodException
-                reason:@"setDataCell: is not supported. Use -setHeaderCell:aView instead."];
+                reason:@"setDataCell: is not supported. Use -setDataView:aView instead."];
 }
 
 - (CPView)dataCell
 {
     [CPException raise:CPUnsupportedMethodException
-                reason:@"dataCell is not supported. Use -dataCell instead."];
+                reason:@"dataCell is not supported. Use -dataView instead."];
 }
 
 - (id)dataCellForRow:(int)row
