@@ -49,7 +49,10 @@ CPViewAnimationFadeOutEffect = @"CPViewAnimationFadeOut";
 		var effect = [self _effect:dictionary];
 		
 		if (effect === CPViewAnimationFadeInEffect)
+		{
 			[view setAlphaValue:0.0];
+			[view setHidden:NO];
+		}
 		else if (effect === CPViewAnimationFadeOutEffect)
 			[view setAlphaValue:1.0];
 	}
