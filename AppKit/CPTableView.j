@@ -1611,6 +1611,14 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     return YES;
 }
 
+- (void)mouseDown:(CPEvent)anEvent
+{
+	[super mouseDown:anEvent];
+	
+	if ([self isEnabled] && [anEvent clickCount] === 2) 
+		[[self target] performSelector:[self doubleAction]];
+}
+
 - (BOOL)startTrackingAt:(CGPoint)aPoint
 {
     var row = [self rowAtPoint:aPoint];
@@ -1701,7 +1709,7 @@ CPTableViewSolidHorizontalGridLineMask = 1 << 1;
     }
 
     // if empty selection is not allowed and the new selection has nothing selected, abort
-    if (!_allowsEmptySelection && [newSelection count] === 0)
+    if (!_allowsEmptySelection && [newSelection firstIndex] === CPNotFound)
         return;
 
     if ([newSelection isEqualToIndexSet:_selectedRowIndexes])
