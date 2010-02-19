@@ -149,10 +149,10 @@
     for (var key in object)
     {
         var value = object[key];
-		
-		if (recursively && value.constructor === Object)
-            value = [CPDictionary dictionaryWithJSObject:value recursively:YES];            
-
+    
+        if (recursively && value.constructor === Object)
+            value = [CPDictionary dictionaryWithJSObject:value recursively:YES];
+    
         [dictionary setObject:value forKey:key];
     }
     

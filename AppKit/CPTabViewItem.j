@@ -53,8 +53,6 @@ CPPressedTab    = 2;
 */
 @implementation CPTabViewItem : CPObject
 {
-	CPTabView 	_tabView;
-	
     id          _identifier;
     CPString    _label;
     
@@ -168,14 +166,6 @@ CPPressedTab    = 2;
 - (CPTabView)tabView
 {
     return _tabView;
-}
-
-- (void)setTabView:(CPTabView)tabView
-{
-	if (_tabView != tabView)
-	{
-		_tabView = tabView;
-	}
 }
 
 @end
