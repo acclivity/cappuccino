@@ -63,7 +63,7 @@ var HORIZONTAL_MARGIN   = 3.0,
     
     CPCellImagePosition     _imagePosition;
     CPImageScaling          _imageScaling;
-	BOOL					_shouldDimImage;
+    BOOL                    _shouldDimImage;
     
     CPImage                 _image;
     CPString                _text;
@@ -212,14 +212,15 @@ var HORIZONTAL_MARGIN   = 3.0,
     return _imageScaling;
 }
 
-- (void)setDimsImage:(BOOL)shouldDimImage
+- (void)setDimsImage:(BOOL)shouldDim
 {
-	var shouldDimImage = !!shouldDimImage;
-	if (_shouldDimImage !== shouldDimImage)
-	{
-		_shouldDimImage = shouldDimImage;
-		[self setNeedsLayout];
-	}
+    var shouldDimImage = !!shouldDimImage;
+
+    if (_shouldDimImage !== shouldDimImage)
+    {
+        _shouldDimImage = shouldDim;
+        [self setNeedsLayout];
+    }
 }
 
 - (void)setTextColor:(CPColor)aTextColor
@@ -582,14 +583,21 @@ var HORIZONTAL_MARGIN   = 3.0,
             imageWidth *= scale;
             imageHeight *= scale;
         }
-		
+        
 #if PLATFORM(DOM)
-		if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
-			_DOMElement.style.filter = @"alpha(opacity=" + _shouldDimImage ? 30 : 100 + ")";
-		else
-			_DOMElement.style.opacity = _shouldDimImage ? 0.3 : 1;
+        if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
+            _DOMElement.style.filter = @"alpha(opacity=" + _shouldDimImage ? 30 : 100 + ")";
+        else
+            _DOMElement.style.opacity = _shouldDimImage ? 0.3 : 1;
 #endif
 
+
+#if PLATFORM(DOM)
+    if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
+        imageStyle.filter = @"alpha(opacity=" + _shouldDimImage ? 35 : 100 + ")";
+    else
+        imageStyle.opacity = _shouldDimImage ? 0.35 : 1.0;
+#endif
 
 #if PLATFORM(DOM)
         _DOMImageElement.width = imageWidth;
