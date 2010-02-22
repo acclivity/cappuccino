@@ -25,18 +25,13 @@
 @import "CPColor.j"
 @import "CPFont.j"
 @import "CPImage.j"
-@import "CPTextField.j"
 @import "CPView.j"
+@import "CPControl.j"
 
 #include "CoreGraphics/CGGeometry.h"
 
 #include "Platform/Platform.h"
 #include "Platform/DOM/CPDOMDisplayServer.h"
-
-
-CPTopVerticalTextAlignment      = 1,
-CPCenterVerticalTextAlignment   = 2,
-CPBottomVerticalTextAlignment   = 3;
 
 var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
     _CPImageAndTextViewImageChangedFlag             = 1 << 1,
@@ -588,12 +583,20 @@ var HORIZONTAL_MARGIN   = 3.0,
             imageWidth *= scale;
             imageHeight *= scale;
         }
+        
+#if PLATFORM(DOM)
+        if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
+            _DOMElement.style.filter = @"alpha(opacity=" + _shouldDimImage ? 30 : 100 + ")";
+        else
+            _DOMElement.style.opacity = _shouldDimImage ? 0.3 : 1;
+#endif
+
 
 #if PLATFORM(DOM)
-	if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
-		imageStyle.filter = @"alpha(opacity=" + _shouldDimImage ? 35 : 100 + ")";
-	else
-		imageStyle.opacity = _shouldDimImage ? 0.35 : 1.0;
+    if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
+        imageStyle.filter = @"alpha(opacity=" + _shouldDimImage ? 35 : 100 + ")";
+    else
+        imageStyle.opacity = _shouldDimImage ? 0.35 : 1.0;
 #endif
 
 #if PLATFORM(DOM)

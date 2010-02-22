@@ -24,6 +24,7 @@
 @import "CPControl.j"
 @import "CPStringDrawing.j"
 @import "CPCompatibility.j"
+@import "_CPImageAndTextView.j"
 
 #include "CoreGraphics/CGGeometry.h"
 #include "Platform/Platform.h"
@@ -161,7 +162,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 + (id)themeAttributes
 {
-    return [CPDictionary dictionaryWithObjects:[_CGInsetMakeZero(), _CGInsetMake(2.0, 2.0, 2.0, 2.0), nil]
+    return [CPDictionary dictionaryWithObjects:[_CGInsetMakeZero(), _CGInsetMake(2.0, 2.0, 2.0, 2.0), [CPNull null]]
                                        forKeys:[@"bezel-inset", @"content-inset", @"bezel-color"]];
 }
 

@@ -315,7 +315,10 @@
     _hasHorizontalScroller = shouldHaveHorizontalScroller;
 
     if (_hasHorizontalScroller && !_horizontalScroller)
-        [self setHorizontalScroller:[[CPScroller alloc] initWithFrame:CGRectMake(0.0, 0.0, _CGRectGetWidth([self bounds]), [CPScroller scrollerWidth])]];
+    {
+        [self setHorizontalScroller:[[CPScroller alloc] initWithFrame:CGRectMake(0.0, 0.0, MAX(_CGRectGetWidth([self bounds]), [CPScroller scrollerWidth]+1), [CPScroller scrollerWidth])]];
+        [[self horizontalScroller] setFrameSize:CGSizeMake(_CGRectGetWidth([self bounds]), [CPScroller scrollerWidth])];
+    }
 
     [self reflectScrolledClipView:_contentView];
 }
@@ -373,7 +376,10 @@
     _hasVerticalScroller = shouldHaveVerticalScroller;
 
     if (_hasVerticalScroller && !_verticalScroller)
-        [self setVerticalScroller:[[CPScroller alloc] initWithFrame:_CGRectMake(0.0, 0.0, [CPScroller scrollerWidth], _CGRectGetHeight([self bounds]))]];
+    {
+        [self setVerticalScroller:[[CPScroller alloc] initWithFrame:_CGRectMake(0.0, 0.0, [CPScroller scrollerWidth], MAX(_CGRectGetHeight([self bounds]), [CPScroller scrollerWidth]+1))]];
+        [[self verticalScroller] setFrameSize:CGSizeMake([CPScroller scrollerWidth], _CGRectGetHeight([self bounds]))];
+    }
 
     [self reflectScrolledClipView:_contentView];
 }
@@ -664,15 +670,33 @@
 */
 - (void)scrollWheel:(CPEvent)anEvent
 {
-   var documentFrame = [[self documentView] frame],
-       contentBounds = [_contentView bounds];
+	var contentBounds = [_contentView bounds];
 
-    // We want integral bounds!
-    contentBounds.origin.x = ROUND(contentBounds.origin.x + [anEvent deltaX] * _horizontalLineScroll);
-    contentBounds.origin.y = ROUND(contentBounds.origin.y + [anEvent deltaY] * _verticalLineScroll);
+	if (![_horizontalScroller isHidden])
+		contentBounds.origin.x = ROUND(contentBounds.origin.x + [anEvent deltaX] * _horizontalLineScroll);
+		
+	if (![_verticalScroller isHidden])
+		contentBounds.origin.y = ROUND(contentBounds.origin.y + [anEvent deltaY] * _verticalLineScroll);
+	
+    [_contentView scrollToPoint:CPPointCreateCopy(contentBounds.origin)];
+    [_headerClipView scrollToPoint:CPPointMake(contentBounds.origin.x, 0.0)];
 
-    [_contentView scrollToPoint:contentBounds.origin];
-    [_headerClipView scrollToPoint:CGPointMake(contentBounds.origin.x, 0.0)];
+	var documentFrame = [[self documentView] frame],
+		enclosingScrollView = [self enclosingScrollView],
+		enclosingContentView = [enclosingScrollView contentView],
+		enclosingContentBounds = [enclosingContentView bounds];
+
+	if (enclosingContentBounds === nil)
+		return;
+
+	if ([_horizontalScroller isHidden] || contentBounds.origin.x <= 0 || contentBounds.origin.x >= documentFrame.size.width - _bounds.size.width)
+		enclosingContentBounds.origin.x = ROUND(enclosingContentBounds.origin.x + [anEvent deltaX] * _horizontalLineScroll);
+		
+	if ([_verticalScroller isHidden] || contentBounds.origin.y <= 0 || contentBounds.origin.y >= documentFrame.size.height - _bounds.size.height)
+		enclosingContentBounds.origin.y = ROUND(enclosingContentBounds.origin.y + [anEvent deltaY] * _verticalLineScroll);
+	
+	[enclosingContentView scrollToPoint:enclosingContentBounds.origin];
+	[[enclosingScrollView _headerView] scrollToPoint:CGPointMake(enclosingContentBounds.origin.x, 0.0)];
 }
 
 - (void)keyDown:(CPEvent)anEvent
@@ -726,7 +750,8 @@ var CPScrollViewContentViewKey       = "CPScrollViewContentView",
     CPScrollViewHasHScrollerKey      = "CPScrollViewHasHScroller",
     CPScrollViewVScrollerKey         = "CPScrollViewVScroller",
     CPScrollViewHScrollerKey         = "CPScrollViewHScroller",
-    CPScrollViewAutohidesScrollerKey = "CPScrollViewAutohidesScroller";
+    CPScrollViewAutohidesScrollerKey = "CPScrollViewAutohidesScroller",
+    CPScrollViewCornerViewKey        = "CPScrollViewCornerViewKey";
 
 @implementation CPScrollView (CPCoding)
 
@@ -749,7 +774,9 @@ var CPScrollViewContentViewKey       = "CPScrollViewContentView",
         _hasVerticalScroller    = [aCoder decodeBoolForKey:CPScrollViewHasVScrollerKey];
         _hasHorizontalScroller  = [aCoder decodeBoolForKey:CPScrollViewHasHScrollerKey];
         _autohidesScrollers     = [aCoder decodeBoolForKey:CPScrollViewAutohidesScrollerKey];
-        
+
+        _cornerView             = [aCoder decodeObjectForKey:CPScrollViewCornerViewKey];
+
         // Do to the anything goes nature of decoding, our subviews may not exist yet, so layout at the end of the run loop when we're sure everything is in a correct state.
         [[CPRunLoop currentRunLoop] performSelector:@selector(reflectScrolledClipView:) target:self argument:_contentView order:0 modes:[CPDefaultRunLoopMode]];
     }
@@ -775,6 +802,8 @@ var CPScrollViewContentViewKey       = "CPScrollViewContentView",
     [aCoder encodeBool:_hasVerticalScroller     forKey:CPScrollViewHasVScrollerKey];
     [aCoder encodeBool:_hasHorizontalScroller   forKey:CPScrollViewHasHScrollerKey];
     [aCoder encodeBool:_autohidesScrollers      forKey:CPScrollViewAutohidesScrollerKey];
+
+    [aCoder encodeObject:_cornerView            forKey:CPScrollViewCornerViewKey];
 }
 
 @end

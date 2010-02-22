@@ -1,8 +1,30 @@
+/*
+ * Debug.js
+ * Objective-J
+ *
+ * Created by Thomas Robinson.
+ * Copyright 2008-2010, 280 North, Inc.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 // formatting helpers
 
 function objj_debug_object_format(aReceiver)
 {
-    return (aReceiver && aReceiver.isa) ? sprintf("<%s %#08x>", GETMETA(aReceiver).name, aReceiver.__address) : String(aReceiver);
+    return (aReceiver && aReceiver.isa) ? sprintf("<%s %#08x>", GETMETA(aReceiver).name, aReceiver._UID) : String(aReceiver);
 }
 
 function objj_debug_message_format(aReceiver, aSelector)
@@ -15,31 +37,33 @@ function objj_debug_message_format(aReceiver, aSelector)
 var objj_msgSend_original = objj_msgSend,
     objj_msgSendSuper_original = objj_msgSendSuper;
 
-
 // decorator management functions
 
 // reset to default objj_msgSend* implementations
-function objj_msgSend_reset()
+GLOBAL(objj_msgSend_reset) = function()
 {
     objj_msgSend = objj_msgSend_original;
     objj_msgSendSuper = objj_msgSendSuper_original;
 }
 
 // decorate both objj_msgSend and objj_msgSendSuper
-function objj_msgSend_decorate()
+GLOBAL(objj_msgSend_decorate) = function()
 {
-    for (var i = 0; i < arguments.length; i++)
+    var index = 0,
+        count = arguments.length;
+
+    for (; index < count; ++index)
     {
-        objj_msgSend = arguments[i](objj_msgSend);
-        objj_msgSendSuper = arguments[i](objj_msgSendSuper);
+        objj_msgSend = arguments[index](objj_msgSend);
+        objj_msgSendSuper = arguments[index](objj_msgSendSuper);
     }
 }
 
 // reset then decorate both objj_msgSend and objj_msgSendSuper
-function objj_msgSend_set_decorators()
+GLOBAL(objj_msgSend_set_decorators) = function()
 {
     objj_msgSend_reset();
-    objj_msgSend_decorate.apply(null, arguments);
+    objj_msgSend_decorate.apply(NULL, arguments);
 }
 
 
@@ -47,12 +71,20 @@ function objj_msgSend_set_decorators()
 
 var objj_backtrace = [];
 
-function objj_backtrace_print(stream) {
-    for (var i = 0; i < objj_backtrace.length; i++)
-        objj_fprintf(stream, objj_debug_message_format(objj_backtrace[i].receiver, objj_backtrace[i].selector));
+GLOBAL(objj_backtrace_print) = function(/*Callable*/ aStream)
+{
+    var index = 0,
+        count = objj_backtrace.length;
+
+    for (; index < count; ++index)
+    {
+        var frame = objj_backtrace[index];
+
+        stream(objj_debug_message_format(frame.receiver, frame.selector));
+    }
 }
 
-function objj_backtrace_decorator(msgSend)
+GLOBAL(objj_backtrace_decorator) = function(msgSend)
 {
     return function(aReceiverOrSuper, aSelector)
     {
@@ -62,13 +94,13 @@ function objj_backtrace_decorator(msgSend)
         objj_backtrace.push({ receiver: aReceiver, selector : aSelector });
         try
         {
-            return msgSend.apply(null, arguments);
+            return msgSend.apply(NULL, arguments);
         }
         catch (anException)
         {
             // print the exception and backtrace
-            objj_fprintf(warning_stream, "Exception " + anException + " in " + objj_debug_message_format(aReceiver, aSelector));
-            objj_backtrace_print(warning_stream);
+            CPLog.warn("Exception " + anException + " in " + objj_debug_message_format(aReceiver, aSelector));
+            objj_backtrace_print(CPLog.warn);
         }
         finally
         {
@@ -81,16 +113,16 @@ function objj_backtrace_decorator(msgSend)
 // type checking decorator
 
 var objj_typechecks_reported = {},
-    objj_typecheck_prints_backtrace = false;
+    objj_typecheck_prints_backtrace = NO;
 
-function objj_typecheck_decorator(msgSend)
+GLOBAL(objj_typecheck_decorator) = function(msgSend)
 {
     return function(aReceiverOrSuper, aSelector)
     {
         var aReceiver = aReceiverOrSuper && (aReceiverOrSuper.receiver || aReceiverOrSuper);
         
         if (!aReceiver)
-            return msgSend.apply(null, arguments);
+            return msgSend.apply(NULL, arguments);
 
         var types = aReceiver.isa.method_dtable[aSelector].types;
         for (var i = 2; i < arguments.length; i++)
@@ -103,15 +135,15 @@ function objj_typecheck_decorator(msgSend)
             {
                 var key = [GETMETA(aReceiver).name, aSelector, i, e].join(";");
                 if (!objj_typechecks_reported[key]) {
-                    objj_typechecks_reported[key] = true;
-                    objj_fprintf(warning_stream, "Type check failed on argument " + (i-2) + " of " + objj_debug_message_format(aReceiver, aSelector) + ": " + e);
+                    objj_typechecks_reported[key] = YES;
+                    CPLog.warn("Type check failed on argument " + (i-2) + " of " + objj_debug_message_format(aReceiver, aSelector) + ": " + e);
                     if (objj_typecheck_prints_backtrace)
-                        objj_backtrace_print(warning_stream);
+                        objj_backtrace_print(CPLog.warn);
                 }
             }
         }
         
-        var result = msgSend.apply(null, arguments);
+        var result = msgSend.apply(NULL, arguments);
 
         try
         {
@@ -121,10 +153,10 @@ function objj_typecheck_decorator(msgSend)
         {
             var key = [GETMETA(aReceiver).name, aSelector, "ret", e].join(";");
             if (!objj_typechecks_reported[key]) {
-                objj_typechecks_reported[key] = true;
-                objj_fprintf(warning_stream, "Type check failed on return val of " + objj_debug_message_format(aReceiver, aSelector) + ": " + e);
+                objj_typechecks_reported[key] = YES;
+                CPLog.warn("Type check failed on return val of " + objj_debug_message_format(aReceiver, aSelector) + ": " + e);
                 if (objj_typecheck_prints_backtrace)
-                    objj_backtrace_print(warning_stream);
+                    objj_backtrace_print(CPLog.warn);
             }
         }
 
@@ -133,7 +165,7 @@ function objj_typecheck_decorator(msgSend)
 }
 
 // type checking logic:
-function objj_debug_typecheck(expectedType, object)
+GLOBAL(objj_debug_typecheck) = function(expectedType, object)
 {
     var objjClass;
     
@@ -157,12 +189,13 @@ function objj_debug_typecheck(expectedType, object)
         {
             return;
         }
-        else if (object && object.isa)
+        else if (object !== undefined && object.isa)
         {
             var theClass = object.isa;
+
             for (; theClass; theClass = theClass.super_class)
-            if (theClass === objjClass)
-                return;
+                if (theClass === objjClass)
+                    return;
         }
     }
     else
@@ -171,7 +204,7 @@ function objj_debug_typecheck(expectedType, object)
     }
     
     var actualType;
-    if (object === null)
+    if (object === NULL)
         actualType = "null";
     else if (object === undefined)
         actualType = "void";
@@ -179,6 +212,6 @@ function objj_debug_typecheck(expectedType, object)
         actualType = GETMETA(object).name;
     else
         actualType = typeof object;
-        
+
     throw ("expected=" + expectedType + ", actual=" + actualType);
 }

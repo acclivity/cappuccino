@@ -1,9 +1,9 @@
 /*
- * bootstrap.js
+ * DebugOptions.js
  * Objective-J
  *
  * Created by Francisco Tolmasky.
- * Copyright 2008, 280 North, Inc.
+ * Copyright 2010, 280 North, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,29 +20,5 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-if (window.OBJJ_MAIN_FILE)
-{
-    var addOnload = function(handler)
-    {
-        if (window.addEventListener)
-            window.addEventListener("load", handler, false);
-        else if (window.attachEvent)
-            window.attachEvent("onload", handler);
-    }
-
-    var documentLoaded = NO;
-    var defaultHandler = function()
-    {
-        documentLoaded = YES;
-    }
-
-    addOnload(defaultHandler);
-
-    objj_import(OBJJ_MAIN_FILE, YES, function()
-    {
-        if (documentLoaded)
-            main();
-        else
-            addOnload(main);
-    });
-}
+#define DEPENDENCY_LOGGING      0
+#define EXECUTION_LOGGING       0

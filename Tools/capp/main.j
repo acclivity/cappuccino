@@ -42,13 +42,15 @@ function printUsage()
     print("    --version         Print version");
     print("    -h, --help        Print usage");
     print("");
-    print(ANSITextApplyProperties("    gen", ANSI_BOLD) + " PATH          Generate new project at PATH from a predefined template");
+    print("    gen PATH          Generate new project at PATH from a predefined template");
     print("    -l                Symlink the Frameworks folder to your $CAPP_BUILD or $STEAM_BUILD directory");
     print("    -t, --template    Specify the template name to use (listed in capp/Resources/Templates)");
     print("    -f, --frameworks  Create only frameworks, not a full application");
     print("    --force           Overwrite Frameworks directory if it already exists");
+    print("    --symlink         Create a symlink to the source Frameworks");
+    print("    --build           Source the Frameworks directory files from your $CAPP_BUILD or $STEAM_BUILD directory");
     print("");
-    print(ANSITextApplyProperties("    config ", ANSI_BOLD));
+    print("    config ");
     print("    name value        Set a value for a given key");
     print("    -l, --list        List all variables set in config file.");
     print("    --get name        Get the value for a given key");

@@ -247,8 +247,6 @@ var CPTabViewDidSelectTabViewItemSelector           = 1,
     
     [_labelsView tabView:self didAddTabViewItem:aTabViewItem];
     
-    [aTabViewItem _setTabView:self];
-    
     if ([_tabViewItems count] == 1)
         [self selectFirstTabViewItem:self];
 
@@ -265,10 +263,8 @@ var CPTabViewDidSelectTabViewItemSelector           = 1,
     var index = [self indexOfTabViewItem:aTabViewItem];
 
     [_tabViewItems removeObjectIdenticalTo:aTabViewItem];
-    
+
     [_labelsView tabView:self didRemoveTabViewItemAtIndex:index];
-    
-    [aTabViewItem _setTabView:nil];
     
     if (_delegateSelectors & CPTabViewDidChangeNumberOfTabViewItemsSelector)
         [_delegate tabViewDidChangeNumberOfTabViewItems:self];

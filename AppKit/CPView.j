@@ -2135,7 +2135,8 @@ setBoundsOrigin:
 
     var theClass = [self class],
         CPViewClass = [CPView class],
-        attributes = [];
+        attributes = [],
+        nullValue = [CPNull null];
 
     for (; theClass && theClass !== CPViewClass; theClass = [theClass superclass])
     {
@@ -2159,9 +2160,10 @@ setBoundsOrigin:
 
         while (attributeCount--)
         {
-            var attributeName = attributeKeys[attributeCount];
+            var attributeName = attributeKeys[attributeCount],
+                attributeValue = [attributeDictionary objectForKey:attributeName];
 
-            attributes.push([attributeDictionary objectForKey:attributeName]);
+            attributes.push(attributeValue === nullValue ? nil : attributeValue);
             attributes.push(attributeName);
         }
     }
@@ -2289,7 +2291,7 @@ setBoundsOrigin:
     return [_themeAttributes[aName] value];
 }
 
-- (void)currentValueForThemeAttribute:(CPString)aName
+- (id)currentValueForThemeAttribute:(CPString)aName
 {
     if (!_themeAttributes || !_themeAttributes[aName])
         [CPException raise:CPInvalidArgumentException reason:[self className] + " does not contain theme attribute '" + aName + "'"];

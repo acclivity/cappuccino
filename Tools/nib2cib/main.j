@@ -30,11 +30,10 @@
 @import "Nib2CibKeyedUnarchiver.j"
 @import "Converter.j"
 
+CPLogRegister(CPLogPrint, "fatal");
+
 var FILE = require("file"),
     OS = require("os");
-
-
-CPLogRegister(CPLogPrint);
 
 function printUsage()
 {
@@ -49,17 +48,9 @@ function loadFrameworks(frameworkPaths, aCallback)
 
     frameworkPaths.forEach(function(aFrameworkPath)
     {
-        var infoPlistPath = FILE.join(aFrameworkPath, "Info.plist");
-
-        if (!FILE.isReadable(infoPlistPath))
-        {
-            print("'" + aFrameworkPath + "' is not a framework or could not be found.");
-            OS.exit(1);
-        }
-
         print("Loading " + aFrameworkPath);
 
-        var frameworkBundle = [[CPBundle alloc] initWithPath:infoPlistPath];
+        var frameworkBundle = [[CPBundle alloc] initWithPath:aFrameworkPath];
 
         [frameworkBundle loadWithDelegate:nil];
 
@@ -99,6 +90,13 @@ function main(args)
                                 break;
 
             case "-R":          [converter setResourcesPath:args[++index]];
+                                break;
+
+            case "-v":          CPLogRegister(CPLogPrint, "warn");
+                                break;
+
+            case "-vv":
+            case "--verbose":   CPLogRegister(CPLogPrint, "trace");
                                 break;
 
             default:            if ([converter inputPath])

@@ -364,30 +364,26 @@
 /* @ignore */
 - (void)tile
 {
-    var width = CGRectGetWidth([self bounds]);
-
+    var width = CGRectGetWidth([self bounds]),
+        count = _items.length;
+        
     if (![_content count] || width == _tileWidth)
         return;
-
+        
     // We try to fit as many views per row as possible.  Any remaining space is then 
     // either proportioned out to the views (if their minSize != maxSize) or used as
     // margin
     var itemSize = CGSizeMakeCopy(_minItemSize);
-
+    
     _numberOfColumns = MAX(1.0, FLOOR(width / itemSize.width));
-
+    
     if (_maxNumberOfColumns > 0)
         _numberOfColumns = MIN(_maxNumberOfColumns, _numberOfColumns);
-
-    var nbItems = [_items count];
-    if (_numberOfColumns > nbItems)
-        _numberOfColumns = nbItems;
-
-    var maxItemSize = CGSizeMakeCopy(_maxItemSize);
-    if (maxItemSize.width==0)
-        maxItemSize.width = FLOOR(width / _numberOfColumns);
-
-   var remaining = width - _numberOfColumns * itemSize.width,
+        
+        if (_numberOfColumns > count)
+            _numberOfColumns = count
+            
+    var remaining = width - _numberOfColumns * itemSize.width,
         itemsNeedSizeUpdate = NO;
         
     if (remaining > 0 && itemSize.width < _maxItemSize.width)
@@ -403,14 +399,12 @@
         itemsNeedSizeUpdate = YES;
     }
     
-    var index = 0,
-        count = _items.length;
+    var index = 0;
     
     if (_maxNumberOfColumns > 0 && _maxNumberOfRows > 0)
         count = MIN(count, _maxNumberOfColumns * _maxNumberOfRows);
     
     _numberOfRows = CEIL(count / _numberOfColumns);
-
     _horizontalMargin = FLOOR((width - _numberOfColumns * itemSize.width) / (_numberOfColumns + 1));
         
     var x = _horizontalMargin,
@@ -419,10 +413,10 @@
     for (; index < count; ++index)
     {
         if (index % _numberOfColumns == 0)
-        {
-            x = 0;
+        {   
+            x = _horizontalMargin;
             y += _verticalMargin + itemSize.height;
-        }
+        } 
         
         var view = [_items[index] view];
         
@@ -430,8 +424,8 @@
         
         if (itemsNeedSizeUpdate)
             [view setFrameSize:_itemSize];
-            
-        x += itemSize.width;
+        
+        x += itemSize.width + _horizontalMargin;
     }
     
     _tileWidth = width;
@@ -682,6 +676,103 @@
 - (id)delegate
 {
     return _delegate;
+}
+
+@end
+
+@implementation CPCollectionView (KeyboardInteraction)
+
+- (CGRect)rectForItemAtIndex:(int)index
+{
+    // Don't re-compute anything just grab the current frame
+    // This allows subclasses to override tile without messing this up.
+    return [[_items[index] view] frame];
+}
+
+- (CGRect)rectForItemsAtIndexes:(CPIndexSet)indexSet
+{
+    var indexArray = [],
+        rect = nil;
+
+    [indexSet getIndexes:indexArray maxCount:-1 inIndexRange:nil];
+
+    for (var i = 0, count = indexArray.length; i < count; ++i)
+    {
+        var index = indexArray[i];
+        if (rect == nil)
+            rect = [self rectForItemAtIndex:index];
+        else
+            rect = CGRectUnion(rect, [self rectForItemAtIndex:index]);
+    }
+
+    return rect;
+}
+
+- (void)_scrollToSelection
+{
+    var rect = [self rectForItemsAtIndexes:[self selectionIndexes]];
+    if (rect) 
+        [self scrollRectToVisible:rect];
+}
+
+- (void)moveLeft:(id)sender
+{
+    var index = [[self selectionIndexes] firstIndex];
+    if (index === CPNotFound) 
+        index = [[self items] count];
+
+    index = MAX(index - 1, 0);
+
+    [self setSelectionIndexes:[CPIndexSet indexSetWithIndex:index]];
+    [self _scrollToSelection];
+}
+
+- (void)moveRight:(id)sender
+{
+    var index = MIN([[self selectionIndexes] firstIndex] + 1, [[self items] count]-1);
+
+    [self setSelectionIndexes:[CPIndexSet indexSetWithIndex:index]];
+    [self _scrollToSelection];
+}
+
+- (void)moveDown:(id)sender
+{
+    var index = MIN([[self selectionIndexes] firstIndex] + [self numberOfColumns], [[self items] count]-1);
+
+    [self setSelectionIndexes:[CPIndexSet indexSetWithIndex:index]];
+    [self _scrollToSelection];
+}
+
+- (void)moveUp:(id)sender
+{
+    var index = [[self selectionIndexes] firstIndex];
+    if (index == CPNotFound) 
+        index = [[self items] count];
+
+    index = MAX(0, index - [self numberOfColumns]);
+
+    [self setSelectionIndexes:[CPIndexSet indexSetWithIndex:index]];
+    [self _scrollToSelection];
+}
+
+- (void)deleteBackwards:(id)sender
+{
+    if ([[self delegate] respondsToSelector:@selector(collectionView:shouldDeleteItemsAtIndexes:)])
+    {
+        [[self delegate] collectionView:self shouldDeleteItemsAtIndexes:[self selectionIndexes]];
+
+        var index = [[self selectionIndexes] firstIndex];
+        if (index > [[self content] count]-1)
+            [self setSelectionIndexes:[CPIndexSet indexSetWithIndex:[[self content] count]-1]];
+
+        [self _scrollToSelection];
+        [self setNeedsDisplay:YES];
+    }
+}
+
+- (void)keyDown:(CPEvent)anEvent
+{
+    [self interpretKeyEvents:[anEvent]];
 }
 
 @end

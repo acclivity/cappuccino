@@ -195,6 +195,15 @@ CPPopUpButtonStatePullsDown = CPThemeState("pulls-down");
 - (void)removeItemAtIndex:(int)anIndex
 {
     [_menu removeItemAtIndex:anIndex];
+
+	if (anIndex !== -1)
+	{
+		_selectedIndex -= 1;
+		
+		if (_selectedIndex < 0)
+			_selectedIndex = 0;
+	}
+
     [self synchronizeTitleAndSelectedItem];
 }
 

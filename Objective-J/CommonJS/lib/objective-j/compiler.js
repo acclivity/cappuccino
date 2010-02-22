@@ -1,62 +1,41 @@
+
 var FILE = require("file"),
     OS = require("os"),
-    objj = require("objective-j"),
-    objj_preprocess = objj.objj_preprocess,
-    IS_FILE = objj.IS_FILE,
-    IS_LOCAL = objj.IS_LOCAL,
-    GET_CODE = objj.GET_CODE,
-    GET_FILE = objj.GET_FILE,
-    MARKER_IMPORT_STD = objj.MARKER_IMPORT_STD,
-    MARKER_IMPORT_LOCAL = objj.MARKER_IMPORT_LOCAL,
-    MARKER_CODE = objj.MARKER_CODE,
-    GET_PATH = objj.GET_PATH;
+    ObjectiveJ = require("objective-j");
 
 require("objective-j/rhino/regexp-rhino-patch");
 
-var OBJJ_PREPROCESSOR_DEBUG_SYMBOLS   = exports.OBJJ_PREPROCESSOR_DEBUG_SYMBOLS   = objj.OBJJ_PREPROCESSOR_DEBUG_SYMBOLS;
-var OBJJ_PREPROCESSOR_TYPE_SIGNATURES = exports.OBJJ_PREPROCESSOR_TYPE_SIGNATURES = objj.OBJJ_PREPROCESSOR_TYPE_SIGNATURES;
-var OBJJ_PREPROCESSOR_PREPROCESS      = exports.OBJJ_PREPROCESSOR_PREPROCESS      = 1 << 10;
-var OBJJ_PREPROCESSOR_COMPRESS        = exports.OBJJ_PREPROCESSOR_COMPRESS        = 1 << 11;
-var OBJJ_PREPROCESSOR_SYNTAX          = exports.OBJJ_PREPROCESSOR_SYNTAX          = 1 << 12;
+ObjectiveJ.Preprocessor.Flags.Preprocess   = 1 << 10;
+ObjectiveJ.Preprocessor.Flags.Compress     = 1 << 11;
+ObjectiveJ.Preprocessor.Flags.CheckSyntax  = 1 << 12;
 
-var SHRINKSAFE_PATH = FILE.join(objj.OBJJ_HOME, "shrinksafe", "shrinksafe.jar"),
-    RHINO_PATH = FILE.join(objj.OBJJ_HOME, "shrinksafe", "js.jar")
-
-var compressor = null;
-
-function sharedCompressor()
-{
-    if (!compressor)
-        compressor = OS.popen("java -server -Dfile.encoding=UTF-8 -classpath " + RHINO_PATH + ":" +  SHRINKSAFE_PATH + " org.dojotoolkit.shrinksafe.Main", { charset:"UTF-8" });
-
-    return compressor;
-}
-
-function compress(/*String*/ aCode, /*String*/ FIXME)
-{
-    var tmpFile = FILE.join("/tmp", FIXME + Math.random() + ".tmp");
-
-    FILE.write(tmpFile, aCode, { charset:"UTF-8" });
-
-    var compressor = sharedCompressor();
-        output = "",
-        chunk = "";
-
-    compressor.stdin.write(tmpFile + "\n");
-    compressor.stdin.flush();
-
-    while ((chunk = compressor.stdout.readLine()) !== "/*----*/\n")
-        output += chunk;
-
-    return output;
-//    return OS.command(["java", "-Dfile.encoding=UTF-8", "-classpath", [RHINO_PATH, SHRINKSAFE_PATH].join(":"), "org.dojotoolkit.shrinksafe.Main", tmpFile]);
+var compressors = {
+    ss  : { id : "minify/shrinksafe" }
+    //,yui : { id : "minify/yuicompressor" }
+    // ,cc  : { id : "minify/closure-compiler" }
+};
+var compressorStats = {};
+function compressor(code) {
+    var winner, winnerName;
+    compressorStats['original'] = (compressorStats['original'] || 0) + code.length;
+    for (var name in compressors) {
+        var compressor = require(compressors[name].id);
+        var result = compressor.compress(code, { charset : "UTF-8", useServer : true });
+        compressorStats[name] = (compressorStats[name] || 0) + result.length;
+        if (!winner || result < winner.length) {
+            winner = result;
+            winnerName = name;
+        }
+    }
+    // print("winner="+winnerName+" compressorStats="+JSON.stringify(compressorStats));
+    return winner;
 }
 
 function compileWithResolvedFlags(aFilePath, objjcFlags, gccFlags)
 {
-    var shouldObjjPreprocess = objjcFlags & OBJJ_PREPROCESSOR_PREPROCESS,
-        shouldCheckSyntax = objjcFlags & OBJJ_PREPROCESSOR_SYNTAX,
-        shouldCompress = objjcFlags & OBJJ_PREPROCESSOR_COMPRESS,
+    var shouldObjjPreprocess = objjcFlags & ObjectiveJ.Preprocessor.Flags.Preprocess,
+        shouldCheckSyntax = objjcFlags & ObjectiveJ.Preprocessor.Flags.CheckSyntax,
+        shouldCompress = objjcFlags & ObjectiveJ.Preprocessor.Flags.Compress,
         fileContents = "";
 
     if (OS.popen("which gcc").stdout.read().length === 0)
@@ -76,53 +55,35 @@ function compileWithResolvedFlags(aFilePath, objjcFlags, gccFlags)
         return fileContents;
 
     // Preprocess contents into fragments.
-    var fragments = objj_preprocess(fileContents, { path : "/x" }, { path: FILE.basename(aFilePath) }, objjcFlags),
-        preprocessed = "";
-
-    // Writer preprocessed fragments out.
-    for (var index = 0; index < fragments.length; index++)
+    // FIXME: should calculate relative path, etc.
+    try
     {
-        var fragment = fragments[index];
+        var executable = ObjectiveJ.preprocess(fileContents, FILE.basename(aFilePath), objjcFlags);
+    }
+    catch (anException)
+    {print(anException);
+        var lines = fileContents.split("\n"),
+            PAD = 3,
+            lineNumber = anException.lineNumber || anException.line,
+            errorInfo = "Syntax error in " + aFilePath +
+                        " on preprocessed line number " + lineNumber + "\n\n" +
+                        "\t" + lines.slice(Math.max(0, lineNumber - 1 - PAD), lineNumber + PAD).join("\n\t");
 
-        if (IS_FILE(fragment))
-            preprocessed += (IS_LOCAL(fragment) ? MARKER_IMPORT_LOCAL : MARKER_IMPORT_STD) + ';' + GET_PATH(fragment).length + ';' + GET_PATH(fragment);
-        else
-        {
-            var code = GET_CODE(fragment);
+        print(errorInfo);
 
-            if (shouldCheckSyntax)
-            {
-                try
-                {
-                    new Function(GET_CODE(fragment));
-                }
-                catch (e)
-                {
-                    var lines = code.split("\n"),
-                        PAD = 3,
-                        lineNumber = e.lineNumber || e.line,
-                        errorInfo = "Syntax error in "+GET_FILE(fragment).path+
-                                    " on preprocessed line number "+lineNumber+"\n\n"+
-                                    "\t"+lines.slice(Math.max(0, lineNumber - 1 - PAD), lineNumber+PAD).join("\n\t");
-
-                    print(errorInfo);
-
-                    throw errorInfo;
-                }
-            }
-
-            if (shouldCompress)
-            {
-                code = compress("function(){" + code + '}', FILE.basename(aFilePath));
-
-                code = code.substr("function(){".length, code.length - "function(){};\n\n".length);
-            }
-
-            preprocessed += MARKER_CODE + ';' + code.length + ';' + code;
-        }
+        throw errorInfo;
     }
 
-    return preprocessed;
+    if (shouldCompress)
+    {
+        var code = executable.code();
+        code = compressor("function(){" + code + "}");
+        // more robust function wrapper stripping
+        code = code.replace(/^\s*function\s*\(\s*\)\s*{|}\s*;?\s*$/g, "");
+        executable.setCode(code);
+    }
+
+    return executable.toMarkedString();
 }
 
 function resolveFlags(args)
@@ -134,7 +95,7 @@ function resolveFlags(args)
         count = args.length,
 
         gccFlags = [],
-        objjcFlags = OBJJ_PREPROCESSOR_PREPROCESS | OBJJ_PREPROCESSOR_SYNTAX;    
+        objjcFlags = ObjectiveJ.Preprocessor.Flags.Preprocess | ObjectiveJ.Preprocessor.Flags.CheckSyntax;
 
     for (; index < count; ++index)
     {
@@ -153,16 +114,16 @@ function resolveFlags(args)
             gccFlags.push(argument);
             
         else if (argument.indexOf("-E") === 0)
-            objjcFlags &= ~OBJJ_PREPROCESSOR_PREPROCESS;
+            objjcFlags &= ~ObjectiveJ.Preprocessor.Flags.Preprocess;
             
         else if (argument.indexOf("-S") === 0)
-            objjcFlags &= ~OBJJ_PREPROCESSOR_SYNTAX;
+            objjcFlags &= ~ObjectiveJ.Preprocessor.Flags.CheckSyntax;
             
         else if (argument.indexOf("-g") === 0)
-            objjcFlags |= OBJJ_PREPROCESSOR_DEBUG_SYMBOLS;
+            objjcFlags |= ObjectiveJ.Preprocessor.Flags.IncludeDebugSymbols;
             
         else if (argument.indexOf("-O") === 0)
-            objjcFlags |= OBJJ_PREPROCESSOR_COMPRESS;
+            objjcFlags |= ObjectiveJ.Preprocessor.Flags.Compress;
 
         else
             filePaths.push(argument);
