@@ -43,7 +43,6 @@
             headerView = [[_CPTableColumnHeaderView alloc] initWithFrame:CPRectMakeZero()];
 
         [_headerView setStringValue:[headerCell objectValue]];
-        [_headerView setFont:[headerCell font]];
 
         [self setHeaderView:_headerView];
 
