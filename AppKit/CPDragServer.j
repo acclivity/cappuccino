@@ -269,7 +269,6 @@ var CPDraggingSource_draggedImage_movedTo_          = 1 << 0,
     
     if (_implementedDraggingSourceMethods & CPDraggingSource_draggedImage_endAt_operation_)
         [_draggingSource draggedImage:[_draggedView image] endedAt:aLocation operation:anOperation];
-
     else if (_implementedDraggingSourceMethods & CPDraggingSource_draggedView_endedAt_operation_)
         [_draggingSource draggedView:_draggedView endedAt:aLocation operation:anOperation];
 
@@ -399,9 +398,9 @@ var CPDraggingSource_draggedImage_movedTo_          = 1 << 0,
         // Make sure we do not finalize (cancel) the drag if the last drag update was disallowed
         if (_dragOperation !== CPDragOperationNone)
             [self performDragOperationInPlatformWindow:platformWindow];
-    
+
         [self draggingEndedInPlatformWindow:platformWindow globalLocation:platformWindowLocation operation:_dragOperation];
-    
+
         // Stop tracking events.
         return;
     }
