@@ -28,17 +28,17 @@
 {
     self = [super NS_initWithCoder:aCoder];
 
-	if (self)
-	{
-		[self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
-		
-		CPLog.warn("Adjusting _CPCornerView height from " +_frame.size.height+ " / " + _bounds.size.height+" to " + 23.0);
-		
-		_frame.size.height = 23.0;
+    if (self)
+    {
+        [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
+        
+        CPLog.warn("Adjusting _CPCornerView height from " +_frame.size.height+ " / " + _bounds.size.height+" to " + 23.0);
+        
+        _frame.size.height = 23.0;
         _bounds.size.height = 23.0;
-	}
-	
-	return self;
+    }
+    
+    return self;
 }
 
 @end
