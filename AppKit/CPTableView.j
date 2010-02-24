@@ -3169,7 +3169,7 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
         _selectionHighlightStyle = CPTableViewSelectionHighlightStyleRegular;
 
         _usesAlternatingRowBackgroundColors = [aCoder decodeBoolForKey:CPTableViewUsesAlternatingBackgroundKey];
-        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithHexString:@"e4e7ff"]]];
+        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithHexString:@"f5f9fc"]]];
 
         _tableColumns = [aCoder decodeObjectForKey:CPTableViewTableColumnsKey];
         [_tableColumns makeObjectsPerformSelector:@selector(setTableView:) withObject:self];
