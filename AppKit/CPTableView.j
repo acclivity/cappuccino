@@ -236,7 +236,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         _selectionHighlightStyle = CPTableViewSelectionHighlightStyleRegular;
 
         [self setUsesAlternatingRowBackgroundColors:NO];
-        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithHexString:@"f5f9fc"]]];
+        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithRed:245.0 / 255.0 green:249.0 / 255.0 blue:252.0 / 255.0 alpha:1.0]]];
 
         _tableColumns = [];
         _tableColumnRanges = [];
@@ -253,7 +253,8 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         _intercellSpacing = _CGSizeMake(0.0, 0.0);
         _rowHeight = 23.0;
 
-        [self setGridColor:[CPColor colorWithHexString:@"dce0e2"]];
+
+        [self setGridColor:[CPColor colorWithRed:229.0 / 255.0 green:229.0 / 255.0 blue:229.0 / 255.0 alpha:1.0]];
         [self setGridStyleMask:CPTableViewGridNone];
 
         _headerView = [[CPTableHeaderView alloc] initWithFrame:CGRectMake(0, 0, [self bounds].size.width, _rowHeight)];
@@ -2059,6 +2060,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         {
             var row = rowArray[rowIndex],
                 dataView = [self _newDataViewForRow:row tableColumn:tableColumn],
+                isButton = [dataView isKindOfClass:[CPButton class]],
                 isTextField = [dataView isKindOfClass:[CPTextField class]];
 
             [dataView setFrame:[self frameOfDataViewAtColumn:column row:row]];
@@ -2077,20 +2079,26 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
             _dataViewsForTableColumns[tableColumnUID][row] = dataView;
 
-            if (_editingCellIndex && _editingCellIndex.x === column && _editingCellIndex.y === row) {
-                _editingCellIndex = undefined;
+            if (isButton || (_editingCellIndex && _editingCellIndex.x === column && _editingCellIndex.y === row))
+            {
+                if (!isButton)
+                    _editingCellIndex = undefined;
 
-                if (isTextField) {
+                if (isTextField)
+                {
                     [dataView setEditable:YES];
                     [dataView setSendsActionOnEndEditing:YES];
                     [dataView setSelectable:YES];
                     [dataView selectText:nil]; // Doesn't seem to actually work (yet?).
                 }
+
                 [dataView setTarget:self];
                 [dataView setAction:@selector(_commitDataViewObjectValue:)];
                 dataView.tableViewEditedColumnObj = tableColumn;
                 dataView.tableViewEditedRowIndex = row;
-            } else if (isTextField) {
+            }
+            else if (isTextField)
+            {
                 [dataView setEditable:NO];
                 [dataView setSelectable:NO];
             }
@@ -2703,7 +2711,6 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
                 rowIndex = [self rowAtPoint:aPoint];
                 if (rowIndex !== -1)
                 {
-
                     if (_implementedDelegateMethods & CPTableViewDelegate_tableView_shouldEditTableColumn_row_)
                         shouldEdit = [_delegate tableView:self shouldEditTableColumn:column row:rowIndex];
                     if (shouldEdit)
@@ -3194,7 +3201,7 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
         _selectionHighlightStyle = CPTableViewSelectionHighlightStyleRegular;
 
         _usesAlternatingRowBackgroundColors = [aCoder decodeBoolForKey:CPTableViewUsesAlternatingBackgroundKey];
-        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithHexString:@"f5f9fc"]]];
+        [self setAlternatingRowBackgroundColors:[[CPColor whiteColor], [CPColor colorWithRed:245.0 / 255.0 green:249.0 / 255.0 blue:252.0 / 255.0 alpha:1.0]]];
 
         _tableColumns = [aCoder decodeObjectForKey:CPTableViewTableColumnsKey];
         [_tableColumns makeObjectsPerformSelector:@selector(setTableView:) withObject:self];

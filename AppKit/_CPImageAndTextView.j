@@ -214,13 +214,16 @@ var HORIZONTAL_MARGIN   = 3.0,
 
 - (void)setDimsImage:(BOOL)shouldDim
 {
-    var shouldDimImage = !!shouldDimImage;
+    if (_shouldDimImage === shouldDim)
+        return
+        
+    _shouldDimImage = !!shouldDim;
+    [self setNeedsLayout];
+}
 
-    if (_shouldDimImage !== shouldDimImage)
-    {
-        _shouldDimImage = shouldDim;
-        [self setNeedsLayout];
-    }
+- (BOOL)dimsImage
+{
+    return _shouldDimImage;
 }
 
 - (void)setTextColor:(CPColor)aTextColor
@@ -584,14 +587,6 @@ var HORIZONTAL_MARGIN   = 3.0,
             imageHeight *= scale;
         }
         
-#if PLATFORM(DOM)
-        if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
-            _DOMElement.style.filter = @"alpha(opacity=" + _shouldDimImage ? 30 : 100 + ")";
-        else
-            _DOMElement.style.opacity = _shouldDimImage ? 0.3 : 1;
-#endif
-
-
 #if PLATFORM(DOM)
     if (CPFeatureIsCompatible(CPOpacityRequiresFilterFeature))
         imageStyle.filter = @"alpha(opacity=" + _shouldDimImage ? 35 : 100 + ")";

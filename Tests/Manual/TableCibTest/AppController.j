@@ -23,7 +23,7 @@ CPLogRegister(CPLogConsole);
 
 - (void)awakeFromCib
 {
-    tableScrollView._DOMElement.style.border = @"1px solid gray";
+    tableScrollView._DOMElement.style.border = @"1px solid " + [[CPColor colorWithRed:204.0 / 255.0 green:204.0 / 255.0 blue:204.0 / 255.0 alpha:1.0] cssString];
     
     // This is called when the cib is done loading.
     // You can implement this method on any object instantiated from a Cib.
