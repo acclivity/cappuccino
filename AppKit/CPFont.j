@@ -130,6 +130,11 @@ var _CPFonts                = {},
     return _name;
 }
 
+- (CPString)description
+{
+	return [CPString stringWithFormat:@"%@ %@ %f pt.", [super description], [self familyName], [self size]];
+}
+
 @end
 
 var CPFontNameKey   = @"CPFontNameKey",
