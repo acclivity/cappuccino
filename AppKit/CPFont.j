@@ -132,13 +132,7 @@ var _CPFonts                = {},
 
 - (BOOL)isEqual:(id)anObject
 {
-    if (!anObject)
-        return NO;
-        
-    if (anObject === self)
-        return YES;
-        
-    return [anObject isKindOfClass:[self class] && [anObject cssString] === [self cssString]];
+    return [anObject isKindOfClass:[CPFont class]] && [anObject cssString] === [self cssString];
 }
 
 - (CPString)description
