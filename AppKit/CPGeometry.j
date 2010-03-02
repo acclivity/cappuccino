@@ -236,7 +236,7 @@ function CPRectContainsPoint(aRect, aPoint)
 */
 function CPRectContainsRect(lhsRect, rhsRect)
 {
-    return CPRectEqualToRect(CPUnionRect(lhsRect, rhsRect), rhsRect);
+    return CPRectEqualToRect(CPRectUnion(lhsRect, rhsRect), rhsRect);
 }
 
 /*!
