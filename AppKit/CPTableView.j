@@ -2542,7 +2542,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     [super mouseDown:anEvent];
     
     if ([self isEnabled] && [anEvent clickCount] === 2) 
-        [[self target] performSelector:[self doubleAction]];
+		[self sendAction:[self doubleAction] to:[self target]];
 }
 
 /*
