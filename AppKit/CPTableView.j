@@ -2542,7 +2542,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     [super mouseDown:anEvent];
     
     if ([self isEnabled] && [anEvent clickCount] === 2) 
-		[self sendAction:[self doubleAction] to:[self target]];
+        [self sendAction:[self doubleAction] to:[self target]];
 }
 
 /*
@@ -2812,11 +2812,11 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     // If there is no (the default) or to little inter cell spacing we create some room for the CPTableViewDropAbove indicator
     // This probably doesn't work if the row height is smaller than or around 5.0
     if ([self intercellSpacing].height < 5.0)
-		rowRect = CPRectInset(rowRect, 0.0, 5.0 - [self intercellSpacing].height);
+        rowRect = CPRectInset(rowRect, 0.0, 5.0 - [self intercellSpacing].height);
     
-	// If the altered row rect contains the drag point we show the drop on
-	// We don't show the drop on indicator if we are dragging below the last row 
-	// in that case we always want to show the drop above indicator
+    // If the altered row rect contains the drag point we show the drop on
+    // We don't show the drop on indicator if we are dragging below the last row 
+    // in that case we always want to show the drop above indicator
     if (CGRectContainsPoint(rowRect, theDragPoint) && row < _numberOfRows) 
         return CPTableViewDropOn;
         
@@ -2828,19 +2828,19 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 */
 - (CPInteger)_proposedRowAtPoint:(CGPoint)dragPoint
 {
-	// We don't use rowAtPoint here because the drag indicator can appear below the last row
-	// and rowAtPoint doesn't return rows that are larger than numberOfRows
-	var row = FLOOR(dragPoint.y / ( _rowHeight + _intercellSpacing.height ));
-	
-	// Determine if the mouse is currently closer to this row or the row below it
-	var lowerRow = row + 1,
-		rect = [self rectOfRow:row],
-		lowerRect = [self rectOfRow:lowerRow];
-		
-	if (ABS(CPRectGetMinY(lowerRect) - dragPoint.y) < ABS(dragPoint.y - CPRectGetMinY(rect)))
-		row = lowerRow;
-	
-	return row;
+    // We don't use rowAtPoint here because the drag indicator can appear below the last row
+    // and rowAtPoint doesn't return rows that are larger than numberOfRows
+    var row = FLOOR(dragPoint.y / ( _rowHeight + _intercellSpacing.height ));
+    
+    // Determine if the mouse is currently closer to this row or the row below it
+    var lowerRow = row + 1,
+        rect = [self rectOfRow:row],
+        lowerRect = [self rectOfRow:lowerRow];
+        
+    if (ABS(CPRectGetMinY(lowerRect) - dragPoint.y) < ABS(dragPoint.y - CPRectGetMinY(rect)))
+        row = lowerRow;
+    
+    return row;
 }
 
 - (void)_validateDrop:(id)info proposedRow:(CPInteger)row proposedDropOperation:(CPTableViewDropOperation)dropOperation
@@ -2861,7 +2861,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
 - (CPRect)_rectForDropHighlightViewBetweenUpperRow:(int)theUpperRowIndex andLowerRow:(int)theLowerRowIndex offset:(CPPoint)theOffset
 {
-	return [self rectOfRow:theLowerRowIndex];
+    return [self rectOfRow:theLowerRowIndex];
 }
 
 - (CPDragOperation)draggingUpdated:(id)sender
@@ -2873,7 +2873,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     var row = [self _proposedRowAtPoint:location],
         dragOperation = [self _validateDrop:sender proposedRow:row proposedDropOperation:dropOperation];
         exposedClipRect = [self exposedClipRect];
-	
+    
     if(_retargetedDropRow !== nil)
         row = _retargetedDropRow;
 

@@ -303,6 +303,7 @@ CPLogRegister(CPLogConsole);
 
 - (void)tableView:(CPTableView)aTableView willDisplayView:(CPView)aView forTableColumn:(CPTableColumn)tableColumn row:(int)row
 {
+	[aView setBackgroundColor:[CPColor greenColor]];
     CPLogConsole(_cmd + " column: " + [tableColumn identifier] + " row:" + row)    
 }
 
