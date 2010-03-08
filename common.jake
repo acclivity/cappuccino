@@ -3,6 +3,13 @@ var FILE = require("file");
 var OS = require("os");
 var UTIL = require("util");
 
+var requiresSudo = false;
+
+SYSTEM.args.slice(1).forEach(function(arg){
+    if (arg === "sudo-install")
+        requiresSudo = true;
+});
+
 function ensurePackageUpToDate(packageName, requiredVersion, options)
 {
     options = options || {};
@@ -32,12 +39,23 @@ function ensurePackageUpToDate(packageName, requiredVersion, options)
     if (!options.noupdate)
     {
         print("Update? yes or no:");
-        if (system.stdin.readLine() !== "yes\n")
+        if (!SYSTEM.env["CAPP_AUTO_UPGRADE"] && system.stdin.readLine() !== "yes\n")
         {
             print("Jake aborted.");
             OS.exit(1);
         }
-        OS.system(["tusk", "install", "--force", packageName]);
+
+        if (requiresSudo)
+        {
+            if (OS.system(["sudo", "tusk", "install", "--force", packageName]))
+            {
+                // Attempt a hackish work-around for sudo compiled with the --with-secure-path option
+                if (OS.system("sudo bash -c 'source " + getShellConfigFile() + "; tusk install --force "+packageName))
+                    OS.exit(1); //rake abort if ($? != 0)
+            }
+        }
+        else
+            OS.system(["tusk", "install", "--force", packageName]);
     }
     
     if (options.message)
@@ -48,10 +66,10 @@ function ensurePackageUpToDate(packageName, requiredVersion, options)
 }
 
 // UPDATE THESE TO PICK UP CORRESPONDING CHANGES IN DEPENDENCIES
-ensurePackageUpToDate("jake",           "0.1.3");
+ensurePackageUpToDate("jake",           "0.1.5");
 ensurePackageUpToDate("browserjs",      "0.1.1");
 ensurePackageUpToDate("shrinksafe",     "0.2");
-ensurePackageUpToDate("narwhal",        "0.2.1", {
+ensurePackageUpToDate("narwhal",        "0.2.2", {
     noupdate : true,
     message : "Update Narwhal to 0.2.1 by running bootstrap.sh, or pulling the latest from git (see: http://github.com/280north/narwhal)."
 });
@@ -162,7 +180,7 @@ serializedENV = function()
     // pseudo-HACK: add NARWHALOPT with packages we should ensure are loaded
     var packages = additionalPackages();
     if (packages.length) {
-        envNew["NARWHALOPT"] = packages.map(function(p) { return "-p " + p; }).join(" ");
+        envNew["NARWHALOPT"] = packages.map(function(p) { return "-p " + OS.enquote(p); }).join(" ");
         envNew["PATH"] = packages.map(function(p) { return FILE.join(p, "bin"); }).concat(SYSTEM.env["PATH"]).join(":");
     }
 
