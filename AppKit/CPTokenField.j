@@ -749,7 +749,7 @@ var CPTokenFieldTableColumnIdentifier = @"CPTokenFieldTableColumnIdentifier";
 	// Hack to make sure we are handling with an array
 	if (![[self _tokens] isKindOfClass:[CPArray class]])
 		return;
-		
+	
 	for (var i = 0; i < [[self _tokens] count]; i++)
 	{
 		var tokenView = [[self _tokens] objectAtIndex:i];
@@ -959,16 +959,15 @@ _CPTokenFieldActiveTokenDeleteImageHighlighted = [[CPImage alloc] initByReferenc
 	[super layoutSubviews];
 	
 	var bezelView = [self layoutEphemeralSubviewNamed:@"bezel-view"
-                                           positioned:CPWindowBelow
-                      relativeToEphemeralSubviewNamed:@"content-view"];
-      
+	                                           positioned:CPWindowBelow
+	                      relativeToEphemeralSubviewNamed:@"content-view"];
     if (bezelView)
-	{		
+	{
 		[_deleteButton setTarget:self];
 		[_deleteButton setAction:@selector(_delete:)];
-		
+	
 		var frame = [bezelView frame];
-		
+	
 		[_deleteButton setFrame:CPRectMake(CPRectGetMaxX(frame) - 12.0, CPRectGetMidY(frame) - 4.0, 9.0, 10.0)];
 	}
 }

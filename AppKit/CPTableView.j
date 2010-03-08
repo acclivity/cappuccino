@@ -2574,7 +2574,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
     // if the table has drag support then we use mouseUp to select a single row.
     // otherwise it uses mouse down.
-    if (!(_implementedDataSourceMethods & CPTableViewDataSource_tableView_writeRowsWithIndexes_toPasteboard_))
+    if (row >=0 && !(_implementedDataSourceMethods & CPTableViewDataSource_tableView_writeRowsWithIndexes_toPasteboard_))
         [self _updateSelectionWithMouseAtRow:row];
 
     [[self window] makeFirstResponder:self];
@@ -2604,7 +2604,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     // or we're dragging from selected rows and we haven't begun a drag session
     if(!_isSelectingSession && _implementedDataSourceMethods & CPTableViewDataSource_tableView_writeRowsWithIndexes_toPasteboard_)
     {
-        if ((ABS(_startTrackingPoint.x - aPoint.x) > 3 || (_verticalMotionCanDrag && ABS(_startTrackingPoint.y - aPoint.y) > 3)) || 
+        if (row >= 0 && (ABS(_startTrackingPoint.x - aPoint.x) > 3 || (_verticalMotionCanDrag && ABS(_startTrackingPoint.y - aPoint.y) > 3)) || 
             ([_selectedRowIndexes containsIndex:row]))
         {
             if ([_selectedRowIndexes containsIndex:row])
@@ -2628,7 +2628,6 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
                                                tableColumns:tableColumns 
                                                       event:currentEvent 
                                                      offset:offset];
-
                 if (!view)
                 {
                     var image = [self dragImageForRowsWithIndexes:_draggedRowIndexes 
@@ -2655,14 +2654,17 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
                 return NO;
             }
+            
+            // The delegate disallowed the drag so clear the dragged row indexes
+            _draggedRowIndexes = [CPIndexSet indexSet];
         }
         else if (ABS(_startTrackingPoint.x - aPoint.x) < 5 && ABS(_startTrackingPoint.y - aPoint.y) < 5)
             return YES;
     }
 
     _isSelectingSession = YES;
-    [self _updateSelectionWithMouseAtRow:row];
-    [self _updateSelectionWithMouseAtRow:[self rowAtPoint:aPoint]];
+    if(row >= 0)
+        [self _updateSelectionWithMouseAtRow:row];
 
     if ((_implementedDataSourceMethods & CPTableViewDataSource_tableView_setObjectValue_forTableColumn_row_)
         && !_trackingPointMovedOutOfClickSlop)
@@ -2750,15 +2752,15 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     var location = [self convertPoint:[sender draggingLocation] fromView:nil],
         dropOperation = [self _proposedDropOperationAtPoint:location],
         row = [self _proposedRowAtPoint:location];
-    
+
     if(_retargetedDropRow !== nil)
         row = _retargetedDropRow;
     
     var draggedTypes = [self registeredDraggedTypes], 
         count = [draggedTypes count],
-        i;
+        i = 0;
         
-    for (i = 0; i < count; i++) 
+    for (; i < count; i++) 
     { 
         if ([[[sender draggingPasteboard] types] containsObject:[draggedTypes objectAtIndex: i]]) 
             return [self _validateDrop:sender proposedRow:row proposedDropOperation:dropOperation]; 
@@ -2828,19 +2830,22 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 */
 - (CPInteger)_proposedRowAtPoint:(CGPoint)dragPoint
 {
-    // We don't use rowAtPoint here because the drag indicator can appear below the last row
-    // and rowAtPoint doesn't return rows that are larger than numberOfRows
-    var row = FLOOR(dragPoint.y / ( _rowHeight + _intercellSpacing.height ));
-    
-    // Determine if the mouse is currently closer to this row or the row below it
-    var lowerRow = row + 1,
-        rect = [self rectOfRow:row],
-        lowerRect = [self rectOfRow:lowerRow];
-        
-    if (ABS(CPRectGetMinY(lowerRect) - dragPoint.y) < ABS(dragPoint.y - CPRectGetMinY(rect)))
-        row = lowerRow;
-    
-    return row;
+	// We don't use rowAtPoint here because the drag indicator can appear below the last row
+	// and rowAtPoint doesn't return rows that are larger than numberOfRows
+	var row = FLOOR(dragPoint.y / ( _rowHeight + _intercellSpacing.height ));
+	
+	// Determine if the mouse is currently closer to this row or the row below it
+	var lowerRow = row + 1,
+		rect = [self rectOfRow:row],
+		lowerRect = [self rectOfRow:lowerRow];
+		
+	if (ABS(CPRectGetMinY(lowerRect) - dragPoint.y) < ABS(dragPoint.y - CPRectGetMinY(rect)))
+		row = lowerRow;
+
+    if (row >= [self numberOfRows])
+        row = [self numberOfRows];
+	
+	return row;
 }
 
 - (void)_validateDrop:(id)info proposedRow:(CPInteger)row proposedDropOperation:(CPTableViewDropOperation)dropOperation
@@ -2876,6 +2881,10 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     
     if(_retargetedDropRow !== nil)
         row = _retargetedDropRow;
+
+    
+    if (dropOperation === CPTableViewDropOn && row >= [self numberOfRows])
+        row = [self numberOfRows] - 1;
 
     var rect = CPRectMakeZero();
     
@@ -3080,10 +3089,10 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     var anEvent = [CPApp currentEvent];
     if([[self selectedRowIndexes] count] > 0)
     {
-       var extend = NO;
+        var extend = NO;
 
-       if(([anEvent modifierFlags] & CPShiftKeyMask) && _allowsMultipleSelection)
-           extend = YES;
+        if(([anEvent modifierFlags] & CPShiftKeyMask) && _allowsMultipleSelection)
+            extend = YES;
 
         var i = [[self selectedRowIndexes] lastIndex];
         if(i<[self numberOfRows] - 1)
@@ -3348,8 +3357,9 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
     else if (dropOperation === CPTableViewDropOn)
     {
         //if row is selected don't fill and stroke white
-        var selectedRows = [tableView selectedRowIndexes];
-        var newRect = _CGRectMake(aRect.origin.x + 2, aRect.origin.y + 2, aRect.size.width - 4, aRect.size.height - 5);
+        var selectedRows = [tableView selectedRowIndexes],
+            newRect = _CGRectMake(aRect.origin.x + 2, aRect.origin.y + 2, aRect.size.width - 4, aRect.size.height - 5);
+
         if([selectedRows containsIndex:currentRow])
         {
             CGContextSetLineWidth(context, 2);
