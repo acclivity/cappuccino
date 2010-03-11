@@ -2153,12 +2153,12 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     }
 }
 
-- (void)_commitDataViewObjectValue:(CPTextView)sender
+- (void)_commitDataViewObjectValue:(id)sender
 {
-    [_dataSource tableView:self
-        setObjectValue:[sender objectValue]
-        forTableColumn:sender.tableViewEditedColumnObj
-        row:sender.tableViewEditedRowIndex];
+    [_dataSource tableView:self setObjectValue:[sender objectValue] forTableColumn:sender.tableViewEditedColumnObj row:sender.tableViewEditedRowIndex];
+
+    if ([sender respondsToSelector:@selector(setEditable:)])
+        [sender setEditable:NO];
 }
 
 - (CPView)_newDataViewForRow:(CPInteger)aRow tableColumn:(CPTableColumn)aTableColumn
