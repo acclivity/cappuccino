@@ -24,8 +24,6 @@
 @import "CPTableView.j"
 @import "CPView.j"
  
-var CPThemeStatePressed = CPThemeState("pressed");
-
 @implementation _CPTableColumnHeaderView : CPView
 {
     _CPImageAndTextView _textField;
@@ -221,13 +219,13 @@ var _CPTableColumnHeaderViewStringValueKey = @"_CPTableColumnHeaderViewStringVal
     if (_pressedColumn != -1)
     {
         var headerView = [_tableView._tableColumns[_pressedColumn] headerView];
-        [headerView unsetThemeState:CPThemeStatePressed];
+        [headerView unsetThemeState:CPThemeStateHighlighted];
     }    
     
     if (column != -1)
     {
         var headerView = [_tableView._tableColumns[column] headerView];
-        [headerView setThemeState:CPThemeStatePressed];
+        [headerView setThemeState:CPThemeStateHighlighted];
     }
     
     _pressedColumn = column;
