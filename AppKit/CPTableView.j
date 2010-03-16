@@ -2083,9 +2083,9 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
             [dataView setObjectValue:[self _objectValueForTableColumn:tableColumn row:row]];
 
             if (isColumnSelected || [self isRowSelected:row])
-                [dataView setThemeState:CPThemeStateSelected];
+                [dataView setThemeState:CPThemeStateHighlighted];
             else
-                [dataView unsetThemeState:CPThemeStateSelected];
+                [dataView unsetThemeState:CPThemeStateHighlighted];
 
             if (_implementedDelegateMethods & CPTableViewDelegate_tableView_willDisplayView_forTableColumn_row_)
                 [_delegate tableView:self willDisplayView:dataView forTableColumn:tableColumn row:row];
