@@ -60,11 +60,11 @@
 {
     var themeState = [self themeState];
 
-    if(themeState & CPThemeStateHighlighted && themeState & CPThemeStatePressed)
+    if(themeState & CPThemeStateSelected && themeState & CPThemeStateHighlighted)
         [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview-highlighted-pressed.png", CGSizeMake(1.0, 23.0))]];
-    else if (themeState & CPThemeStateHighlighted)
+    else if (themeState & CPThemeStateSelected)
         [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview-highlighted.png", CGSizeMake(1.0, 23.0))]];
-    else if (themeState & CPThemeStatePressed)
+    else if (themeState & CPThemeStateHighlighted)
         [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview-pressed.png", CGSizeMake(1.0, 23.0))]];
     else 
         [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
@@ -102,15 +102,15 @@
 
 - (void)_setIndicatorImage:(CPImage)anImage
 {
-    if (anImage)
-    {
-        [_textField setImage:anImage];
-        [_textField setImagePosition:CPImageRight];
-    }
-    else
-    {
-        [_textField setImagePosition:CPNoImage];
-    }
+	if (anImage)
+	{
+		[_textField setImage:anImage];
+		[_textField setImagePosition:CPImageRight];
+	}
+	else
+	{
+		[_textField setImagePosition:CPNoImage];
+	}
 }
 
 @end
@@ -158,25 +158,22 @@ var _CPTableColumnHeaderViewStringValueKey = @"_CPTableColumnHeaderViewStringVal
     CPTableView _tableView @accessors(property=tableView);
 }
 
-- (void)_init
-{
-    _resizedColumn = -1;
-    _draggedColumn = -1;
-    _pressedColumn = -1;
-    _draggedDistance = 0.0;
-    _lastLocation = nil;
-    _columnOldWidth = nil;
-
-    [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 22.0))]];
-}
-
-- (id)initWithFrame:(CGRect)aFrame
+- (void)initWithFrame:(CGRect)aFrame
 {
     self = [super initWithFrame:aFrame];
 
     if (self)
-        [self _init];
+    {
+        _resizedColumn = -1;
+        _draggedColumn = -1;
+        _pressedColumn = -1;
+        _draggedDistance = 0.0;
+        _lastLocation = nil;
+        _columnOldWidth = nil;
         
+        [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
+    }
+
     return self;
 }
 
@@ -426,7 +423,7 @@ var _CPTableColumnHeaderViewStringValueKey = @"_CPTableColumnHeaderViewStringVal
         exposedRange = CPMakeRange(firstIndex, [exposedTableColumns lastIndex] - firstIndex + 1);
 
     CGContextSetLineWidth(context, 1);
-    CGContextSetStrokeColor(context, [CPColor colorWithRed:204.0 / 255.0 green:204.0 / 255.0 blue:204.0 / 255.0 alpha:1.0]);
+    CGContextSetStrokeColor(context, [_tableView gridColor]);
 
     [exposedColumnIndexes getIndexes:columnsArray maxCount:-1 inIndexRange:exposedRange];
 
@@ -482,7 +479,12 @@ var CPTableHeaderViewTableViewKey = @"CPTableHeaderViewTableViewKey";
 {
     if (self = [super initWithCoder:aCoder])
     {
-        [self _init];
+        _resizedColumn = -1;
+        _draggedColumn = -1;
+        _pressedColumn = -1;
+        _draggedDistance = 0.0;
+        _lastLocation = nil;
+        _columnOldWidth = nil;
         _tableView = [aCoder decodeObjectForKey:CPTableHeaderViewTableViewKey];
     }
 
