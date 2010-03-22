@@ -60,11 +60,11 @@
 {
     var themeState = [self themeState];
 
-    if(themeState & CPThemeStateSelected && themeState & CPThemeStateHighlighted)
+    if(themeState & CPThemeStateHighlighted && themeState & CPThemeStatePressed)
         [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview-highlighted-pressed.png", CGSizeMake(1.0, 23.0))]];
-    else if (themeState & CPThemeStateSelected)
-        [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview-highlighted.png", CGSizeMake(1.0, 23.0))]];
     else if (themeState & CPThemeStateHighlighted)
+        [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview-highlighted.png", CGSizeMake(1.0, 23.0))]];
+    else if (themeState & CPThemeStatePressed)
         [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview-pressed.png", CGSizeMake(1.0, 23.0))]];
     else 
         [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
@@ -158,21 +158,24 @@ var _CPTableColumnHeaderViewStringValueKey = @"_CPTableColumnHeaderViewStringVal
     CPTableView _tableView @accessors(property=tableView);
 }
 
-- (void)initWithFrame:(CGRect)aFrame
+- (void)_init
+{
+    _resizedColumn = -1;
+    _draggedColumn = -1;
+    _pressedColumn = -1;
+    _draggedDistance = 0.0;
+    _lastLocation = nil;
+    _columnOldWidth = nil;
+
+    [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
+}
+
+- (id)initWithFrame:(CGRect)aFrame
 {
     self = [super initWithFrame:aFrame];
 
     if (self)
-    {
-        _resizedColumn = -1;
-        _draggedColumn = -1;
-        _pressedColumn = -1;
-        _draggedDistance = 0.0;
-        _lastLocation = nil;
-        _columnOldWidth = nil;
-        
-        [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
-    }
+        [self _init];
 
     return self;
 }
