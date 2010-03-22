@@ -860,12 +860,11 @@ CPRunContinuesResponse  = -1002;
     
     if ([windowController respondsToSelector:anAction])
         return windowController;
-    
+
     var theDocument = [windowController document];
-    
-    if (theDocument != delegate && [theDocument respondsToSelector:anAction])
+    if (theDocument !== delegate && [theDocument respondsToSelector:anAction])
         return theDocument;
-    
+
     return nil;
 }
 
@@ -913,8 +912,6 @@ CPRunContinuesResponse  = -1002;
 - (void)setCallback:(Function)aCallback forNextEventMatchingMask:(unsigned int)aMask untilDate:(CPDate)anExpiration inMode:(CPString)aMode dequeue:(BOOL)shouldDequeue
 {
     _eventListeners.push(_CPEventListenerMake(aMask, aCallback));
-    
-    if (_eventListeners.length == 3) objj_debug_print_backtrace();
 }
 
 - (CPEvent)setTarget:(id)aTarget selector:(SEL)aSelector forNextEventMatchingMask:(unsigned int)aMask untilDate:(CPDate)anExpiration inMode:(CPString)aMode dequeue:(BOOL)shouldDequeue
@@ -973,10 +970,9 @@ CPRunContinuesResponse  = -1002;
    [self endSheet:sheet returnCode:0];
 }
 
-
 - (CPArray)arguments
 {
-    if(_fullArgsString != window.location.hash)
+    if(_fullArgsString !== window.location.hash)
         [self _reloadArguments];
     
     return _args;
@@ -1009,12 +1005,18 @@ CPRunContinuesResponse  = -1002;
 - (void)_reloadArguments
 {
     _fullArgsString = window.location.hash;
-    var args = _fullArgsString.replace("#", "").split("/").slice(0);
     
-    for(var i=0, count = args.length; i<count; i++) 
-        args[i] = decodeURIComponent(args[i]);
-    
-    _args = args;
+    if (_fullArgsString.length)
+    {
+        var args = _fullArgsString.substring(1).split("/");
+
+        for (var i = 0, count = args.length; i < count; i++)
+            args[i] = decodeURIComponent(args[i]);
+
+        _args = args;
+    }
+    else
+        _args = [];
 }
 
 - (CPDictionary)namedArguments
@@ -1058,7 +1060,7 @@ CPRunContinuesResponse  = -1002;
     else if ([self mainWindow])
         [[self mainWindow] makeKeyAndOrderFront:self];
     else
-        [[[self mainMenu] window] makeKeyWindow]; //FIXME this may not actually work
+        [[self mainMenu]._menuWindow makeKeyWindow]; //FIXME this may not actually work
 
     _previousKeyWindow = nil;
     _previousMainWindow = nil;
@@ -1143,29 +1145,8 @@ function CPApplicationMain(args, namedArgs)
 
     [principalClass sharedApplication];
 
-    //FIXME?
-    if (!args)
-    {
-        var args = [CPApp arguments];
-
-        if([args containsObject:"debug"])
-            CPLogRegister(CPLogPopup);
-    }
-
-    if (!namedArgs)
-    {
-        var searchParams = window.location.search.substring(1).split("&");
-            namedArgs = [CPDictionary dictionary];
-
-        for(var i=0; i<searchParams.length; i++)
-        {
-            var index = searchParams[i].indexOf('=');
-            if(index == -1)
-                [namedArgs setObject: "" forKey:searchParams[i]];
-            else
-                [namedArgs setObject: searchParams[i].substring(index+1) forKey: searchParams[i].substring(0, index)];
-        }
-    }
+    if ([args containsObject:"debug"])
+        CPLogRegister(CPLogPopup);
 
     CPApp._args = args;
     CPApp._namedArgs = namedArgs;

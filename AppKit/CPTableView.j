@@ -67,29 +67,29 @@ var CPTableViewDelegate_selectionShouldChangeInTableView_                       
     CPTableViewDelegate_tableViewSelectionIsChanging_                                                   = 1 << 19;
 
 //CPTableViewDraggingDestinationFeedbackStyles
-CPTableViewDraggingDestinationFeedbackStyleNone = -1,
-CPTableViewDraggingDestinationFeedbackStyleRegular = 0,
+CPTableViewDraggingDestinationFeedbackStyleNone = -1;
+CPTableViewDraggingDestinationFeedbackStyleRegular = 0;
 CPTableViewDraggingDestinationFeedbackStyleSourceList = 1;
 
 //CPTableViewDropOperations
-CPTableViewDropOn = 0,
+CPTableViewDropOn = 0;
 CPTableViewDropAbove = 1;
 
 // TODO: add docs
 
-CPTableViewSelectionHighlightStyleNone = -1,
-CPTableViewSelectionHighlightStyleRegular = 0,
+CPTableViewSelectionHighlightStyleNone = -1;
+CPTableViewSelectionHighlightStyleRegular = 0;
 CPTableViewSelectionHighlightStyleSourceList = 1;
 
 CPTableViewGridNone                    = 0;
 CPTableViewSolidVerticalGridLineMask   = 1 << 0;
 CPTableViewSolidHorizontalGridLineMask = 1 << 1;
 
-CPTableViewNoColumnAutoresizing = 0,
-CPTableViewUniformColumnAutoresizingStyle = 1,
-CPTableViewSequentialColumnAutoresizingStyle = 2,
-CPTableViewReverseSequentialColumnAutoresizingStyle = 3,
-CPTableViewLastColumnOnlyAutoresizingStyle = 4,
+CPTableViewNoColumnAutoresizing = 0;
+CPTableViewUniformColumnAutoresizingStyle = 1;
+CPTableViewSequentialColumnAutoresizingStyle = 2;
+CPTableViewReverseSequentialColumnAutoresizingStyle = 3;
+CPTableViewLastColumnOnlyAutoresizingStyle = 4;
 CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
 
@@ -194,6 +194,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     SEL         _doubleAction;
     unsigned    _columnAutoResizingStyle;
 
+    int         _lastTrackedRowIndex;
     CGPoint     _originalMouseDownPoint;
     BOOL        _verticalMotionCanDrag;
     unsigned    _destinationDragStyle;
@@ -807,7 +808,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         {
             var rowIndex = deselectRows[count];
             var view = dataViewsInTableColumn[rowIndex];
-            [view unsetThemeState:CPThemeStateHighlighted];
+            [view unsetThemeState:CPThemeStateSelected];
         }
 
         count = selectRows.length;
@@ -815,7 +816,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         {
             var rowIndex = selectRows[count];
             var view = dataViewsInTableColumn[rowIndex];
-            [view setThemeState:CPThemeStateHighlighted];
+            [view setThemeState:CPThemeStateSelected];
         }
     }
 }
@@ -847,13 +848,13 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         {
             var rowIndex = selectRows[i],
                 dataView = dataViewsInTableColumn[rowIndex];
-            [dataView unsetThemeState:CPThemeStateHighlighted];
+            [dataView unsetThemeState:CPThemeStateSelected];
         }
         
         if (_headerView)
         {
             var headerView = [_tableColumns[columnIndex] headerView];
-            [headerView unsetThemeState:CPThemeStateHighlighted];
+            [headerView unsetThemeState:CPThemeStateSelected];
         }
     }
 
@@ -868,14 +869,19 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         {
             var rowIndex = selectRows[i],
                 dataView = dataViewsInTableColumn[rowIndex];
-            [dataView setThemeState:CPThemeStateHighlighted];
+            [dataView setThemeState:CPThemeStateSelected];
         }
         if (_headerView)
         {
             var headerView = [_tableColumns[columnIndex] headerView];
-            [headerView setThemeState:CPThemeStateHighlighted];
+            [headerView setThemeState:CPThemeStateSelected];
         }
     }
+}
+
+- (int)selectedColumn
+{
+    [_selectedColumnIndexes lastIndex];
 }
 
 - (CPIndexSet)selectedColumnIndexes
@@ -1738,10 +1744,10 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     if (_headerView)
     {
         if (_currentHighlightedTableColumn != nil)
-            [[_currentHighlightedTableColumn headerView] unsetThemeState:CPThemeStateHighlighted];
+            [[_currentHighlightedTableColumn headerView] unsetThemeState:CPThemeStateSelected];
    
         if (aTableColumn != nil)
-            [[aTableColumn headerView] setThemeState:CPThemeStateHighlighted];
+            [[aTableColumn headerView] setThemeState:CPThemeStateSelected];
     }
     
     _currentHighlightedTableColumn = aTableColumn;
@@ -1991,7 +1997,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
     // Now clear all the leftovers
     // FIXME: this could be faster!
-    for (identifier in _cachedDataViews)
+    for (var identifier in _cachedDataViews)
     {
         var dataViews = _cachedDataViews[identifier],
             count = dataViews.length;
@@ -2078,9 +2084,9 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
             [dataView setObjectValue:[self _objectValueForTableColumn:tableColumn row:row]];
 
             if (isColumnSelected || [self isRowSelected:row])
-                [dataView setThemeState:CPThemeStateHighlighted];
+                [dataView setThemeState:CPThemeStateSelected];
             else
-                [dataView unsetThemeState:CPThemeStateHighlighted];
+                [dataView unsetThemeState:CPThemeStateSelected];
 
             if (_implementedDelegateMethods & CPTableViewDelegate_tableView_willDisplayView_forTableColumn_row_)
                 [_delegate tableView:self willDisplayView:dataView forTableColumn:tableColumn row:row];
@@ -2149,12 +2155,12 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     }
 }
 
-- (void)_commitDataViewObjectValue:(CPTextView)sender
+- (void)_commitDataViewObjectValue:(id)sender
 {
-    [_dataSource tableView:self
-        setObjectValue:[sender objectValue]
-        forTableColumn:sender.tableViewEditedColumnObj
-        row:sender.tableViewEditedRowIndex];
+    [_dataSource tableView:self setObjectValue:[sender objectValue] forTableColumn:sender.tableViewEditedColumnObj row:sender.tableViewEditedRowIndex];
+
+    if ([sender respondsToSelector:@selector(setEditable:)])
+        [sender setEditable:NO];
 }
 
 - (CPView)_newDataViewForRow:(CPInteger)aRow tableColumn:(CPTableColumn)aTableColumn
@@ -2649,8 +2655,11 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     }
 
     _isSelectingSession = YES;
-    if(row >= 0)
+    if(row >= 0 && row !== _lastTrackedRowIndex)
+    {
+        _lastTrackedRowIndex = row;
         [self _updateSelectionWithMouseAtRow:row];
+    }
 
     if ((_implementedDataSourceMethods & CPTableViewDataSource_tableView_setObjectValue_forTableColumn_row_)
         && !_trackingPointMovedOutOfClickSlop)
@@ -3185,6 +3194,7 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
     CPTableViewGridColorKey                 = @"CPTableViewGridColorKey",
     CPTableViewGridStyleMaskKey             = @"CPTableViewGridStyleMaskKey",
     CPTableViewUsesAlternatingBackgroundKey = @"CPTableViewUsesAlternatingBackgroundKey",
+    CPTableViewAlternatingRowColorsKey      = @"CPTableViewAlternatingRowColorsKey",
     CPTableViewHeaderViewKey                = @"CPTableViewHeaderViewKey",
     CPTableViewCornerViewKey                = @"CPTableViewCornerViewKey";
 
@@ -3234,6 +3244,9 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
         
         _gridColor = [aCoder decodeObjectForKey:CPTableViewGridColorKey] || [CPColor grayColor];
         _gridStyleMask = [aCoder decodeIntForKey:CPTableViewGridStyleMaskKey] || CPTableViewGridNone;
+
+        _alternatingRowBackgroundColors = [aCoder decodeObjectForKey:CPTableViewAlternatingRowColorsKey];
+        _usesAlternatingRowBackgroundColors = [aCoder decodeObjectForKey:CPTableViewUsesAlternatingBackgroundKey]
         
         _headerView = [aCoder decodeObjectForKey:CPTableViewHeaderViewKey];
         _cornerView = [aCoder decodeObjectForKey:CPTableViewCornerViewKey];
@@ -3277,6 +3290,7 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
     [aCoder encodeInt:_gridStyleMask forKey:CPTableViewGridStyleMaskKey];
     
     [aCoder encodeBool:_usesAlternatingRowBackgroundColors forKey:CPTableViewUsesAlternatingBackgroundKey];
+    [aCoder encodeObject:_alternatingRowBackgroundColors forKey:CPTableViewAlternatingRowColorsKey]
 
     [aCoder encodeObject:_cornerView forKey:CPTableViewCornerViewKey];
     [aCoder encodeObject:_headerView forKey:CPTableViewHeaderViewKey];

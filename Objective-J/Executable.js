@@ -137,6 +137,7 @@ Executable.prototype.execute = function()
 #endif
     var oldContextBundle = CONTEXT_BUNDLE;
 
+    // FIXME: Should we have stored this?
     CONTEXT_BUNDLE = CFBundle.bundleContainingURL(this.URL());
 
     var result = this._function.apply(global, this.functionArguments());
@@ -217,10 +218,13 @@ Executable.prototype.loadFileDependencies = function(aCallback)
 {
     var status = this._fileDependencyStatus;
 
-    if (status === ExecutableLoadedFileDependencies)
-        return aCallback();
+    if (aCallback)
+    {
+        if (status === ExecutableLoadedFileDependencies)
+            return aCallback();
 
-    this._fileDependencyCallbacks.push(aCallback)
+        this._fileDependencyCallbacks.push(aCallback);
+    }
 
     if (status === ExecutableUnloadedFileDependencies)
     {

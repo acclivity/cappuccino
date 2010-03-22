@@ -13,7 +13,6 @@ CPLogRegister(CPLogConsole);
 @implementation AppController : CPObject
 {
     CPWindow    theWindow; //this "outlet" is connected automatically by the Cib
-    CPScrollView tableScrollView;
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
@@ -23,8 +22,6 @@ CPLogRegister(CPLogConsole);
 
 - (void)awakeFromCib
 {
-    tableScrollView._DOMElement.style.border = @"1px solid " + [[CPColor colorWithRed:204.0 / 255.0 green:204.0 / 255.0 blue:204.0 / 255.0 alpha:1.0] cssString];
-    
     // This is called when the cib is done loading.
     // You can implement this method on any object instantiated from a Cib.
     // It's a useful hook for setting up current UI values, and other things. 
@@ -35,7 +32,7 @@ CPLogRegister(CPLogConsole);
 
 - (int)numberOfRowsInTableView:(CPTableView)tableView
 {
-    return 5;
+    return 100000;
 }
 
 - (id)tableView:(CPTableView)tableView objectValueForTableColumn:(CPTableColumn)tableColumn row:(int)row

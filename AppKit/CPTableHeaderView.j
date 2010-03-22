@@ -24,8 +24,6 @@
 @import "CPTableView.j"
 @import "CPView.j"
  
-var CPThemeStatePressed = CPThemeState("pressed");
-
 @implementation _CPTableColumnHeaderView : CPView
 {
     _CPImageAndTextView _textField;
@@ -160,21 +158,24 @@ var _CPTableColumnHeaderViewStringValueKey = @"_CPTableColumnHeaderViewStringVal
     CPTableView _tableView @accessors(property=tableView);
 }
 
-- (void)initWithFrame:(CGRect)aFrame
+- (void)_init
+{
+    _resizedColumn = -1;
+    _draggedColumn = -1;
+    _pressedColumn = -1;
+    _draggedDistance = 0.0;
+    _lastLocation = nil;
+    _columnOldWidth = nil;
+
+    [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
+}
+
+- (id)initWithFrame:(CGRect)aFrame
 {
     self = [super initWithFrame:aFrame];
 
     if (self)
-    {
-        _resizedColumn = -1;
-        _draggedColumn = -1;
-        _pressedColumn = -1;
-        _draggedDistance = 0.0;
-        _lastLocation = nil;
-        _columnOldWidth = nil;
-        
-        [self setBackgroundColor:[CPColor colorWithPatternImage:CPAppKitImage("tableview-headerview.png", CGSizeMake(1.0, 23.0))]];
-    }
+        [self _init];
 
     return self;
 }
@@ -221,13 +222,13 @@ var _CPTableColumnHeaderViewStringValueKey = @"_CPTableColumnHeaderViewStringVal
     if (_pressedColumn != -1)
     {
         var headerView = [_tableView._tableColumns[_pressedColumn] headerView];
-        [headerView unsetThemeState:CPThemeStatePressed];
+        [headerView unsetThemeState:CPThemeStateHighlighted];
     }    
     
     if (column != -1)
     {
         var headerView = [_tableView._tableColumns[column] headerView];
-        [headerView setThemeState:CPThemeStatePressed];
+        [headerView setThemeState:CPThemeStateHighlighted];
     }
     
     _pressedColumn = column;
@@ -481,12 +482,7 @@ var CPTableHeaderViewTableViewKey = @"CPTableHeaderViewTableViewKey";
 {
     if (self = [super initWithCoder:aCoder])
     {
-        _resizedColumn = -1;
-        _draggedColumn = -1;
-        _pressedColumn = -1;
-        _draggedDistance = 0.0;
-        _lastLocation = nil;
-        _columnOldWidth = nil;
+        [self _init];
         _tableView = [aCoder decodeObjectForKey:CPTableHeaderViewTableViewKey];
     }
 
