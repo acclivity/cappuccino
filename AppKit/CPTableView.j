@@ -3240,9 +3240,6 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
         
         _gridColor = [aCoder decodeObjectForKey:CPTableViewGridColorKey] || [CPColor grayColor];
         _gridStyleMask = [aCoder decodeIntForKey:CPTableViewGridStyleMaskKey] || CPTableViewGridNone;
-
-        _alternatingRowBackgroundColors = [aCoder decodeObjectForKey:CPTableViewAlternatingRowColorsKey];
-        _usesAlternatingRowBackgroundColors = [aCoder decodeObjectForKey:CPTableViewUsesAlternatingBackgroundKey]
         
         _headerView = [aCoder decodeObjectForKey:CPTableViewHeaderViewKey];
         _cornerView = [aCoder decodeObjectForKey:CPTableViewCornerViewKey];
