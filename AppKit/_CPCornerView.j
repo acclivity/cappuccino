@@ -20,4 +20,14 @@
     return self;
 }
 
+- (id)initWithCoder:(CPCoder)aCoder
+{
+    self = [super initWithCoder:aCoder];
+    {
+        [self _init];
+    }
+
+    return self;
+}
+
 @end

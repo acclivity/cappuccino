@@ -19,7 +19,7 @@ tableTestDragType = @"CPTableViewTestDragType";
     dataSet2 = [],
     dataSet3 = [];
     
-    for(var i = 1; i < 100; i++)
+    for(var i = 1; i < 100000; i++)
     {
         dataSet1[i - 1] = [CPNumber numberWithInt:i];
         dataSet2[i - 1] = [CPNumber numberWithInt:i+10];
