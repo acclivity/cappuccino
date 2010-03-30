@@ -873,7 +873,7 @@ CPRunContinuesResponse  = -1002;
     Checks for a target in the following order:
     <ol>
         <li>a responder from the key window</li>
-        <li>a responder frmo the main window</li>
+        <li>a responder from the main window</li>
         <li>the CPApplication instance</li>
         <li>the application delegate</li>
         <li>the document controller</li>
@@ -1222,6 +1222,11 @@ var _CPAppBootstrapperActions = nil;
 + (void)cibDidFinishLoading:(CPCib)aCib
 {
     [self performActions];
+}
+
++ (void)cibDidFailToLoad:(CPCib)aCib
+{
+    throw new Error("Could not load main cib file (Did you forget to nib2cib it?).");
 }
 
 + (void)reset
