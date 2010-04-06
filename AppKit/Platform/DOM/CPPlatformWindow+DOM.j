@@ -130,8 +130,6 @@ var CPDOMEventGetClickCount,
     StopDOMEventPropagation,
     StopContextMenuDOMEventPropagation;
 
-var _DOMEventGuard;
-
 //right now we hard code q, w, r and t as keys to propogate
 //these aren't normal keycodes, they are with modifier key codes
 //might be mac only, we should investigate futher later.
@@ -258,19 +256,6 @@ var supportsNativeDragAndDrop = [CPPlatform supportsDragAndDrop];
 
     // Make sure the pastboard element is blurred.
     _DOMPasteboardElement.blur();
-
-    // Create a full screen div to protect against iframes and other elements from consuming events during tracking
-    // FIXME: multiple windows
-    _DOMEventGuard = theDocument.createElement("div");
-    _DOMEventGuard.style.position = "absolute";
-    _DOMEventGuard.style.top = "0px";
-    _DOMEventGuard.style.left = "0px";
-    _DOMEventGuard.style.width = "100%";
-    _DOMEventGuard.style.height = "100%";
-    _DOMEventGuard.style.zIndex = "999";
-    _DOMEventGuard.style.display = "none";
-    _DOMEventGuard.className = "cpdontremove";
-    _DOMBodyElement.appendChild(_DOMEventGuard);
 }
 
 - (void)registerDOMWindow
@@ -1130,9 +1115,6 @@ var supportsNativeDragAndDrop = [CPPlatform supportsDragAndDrop];
 
     if (StopDOMEventPropagation && (!supportsNativeDragAndDrop || type !== "mousedown" && !isDragging))
         CPDOMEventStop(aDOMEvent, self);
-
-    // if there are any tracking event listeners then show the event guard so we don't lose events to iframes
-    _DOMEventGuard.style.display = (CPApp._eventListeners.length === 0) ? "none" : "";
 
     [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
