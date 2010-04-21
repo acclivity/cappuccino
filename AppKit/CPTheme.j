@@ -532,13 +532,17 @@ function CPThemeAttributeEncode(aCoder, aThemeAttribute)
 function CPThemeAttributeDecode(aCoder, anAttributeName, aDefaultValue, aTheme, aClass)
 {
     var key = "$a" + anAttributeName;
-
+    
     if (![aCoder containsValueForKey:key])
         var attribute = [[_CPThemeAttribute alloc] initWithName:anAttributeName defaultValue:aDefaultValue];
 
     else
     {
         var attribute = [aCoder decodeObjectForKey:key];
+        
+        // Make sure the decoed object is not a value wrapper
+        if ((attribute != nil) && (attribute.isa === [_CPKeyedArchiverValue class]))
+            attribute = [attribute JSObject];
 
         if (!attribute.isa || ![attribute isKindOfClass:[_CPThemeAttribute class]])
         {
