@@ -331,7 +331,10 @@ var CPTokenFieldTableColumnIdentifier = @"CPTokenFieldTableColumnIdentifier";
 #endif
 	_selectedTokenIndexes = [CPIndexSet indexSet];
 
-	[self textDidEndEditing:[CPNotification notificationWithName:CPControlTextDidBeginEditingNotification object:self userInfo:nil]];
+    [self textDidEndEditing:[CPNotification notificationWithName:CPControlTextDidEndEditingNotification object:self userInfo:nil]];
+
+    if ([self sendsActionOnEndEditing])
+        [self sendAction:[self action] to:[self target]];
 
 	return YES;
 }
