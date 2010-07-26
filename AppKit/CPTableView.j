@@ -1226,14 +1226,16 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
 /*!
     @ignore
-     Asks it's delegate for the context menu to display for a given row
+     Asks its delegate for the context menu to display for a given row
      The row can be -1 indicating that no actual row was clicked but the click was inside the tableview, 
      this can useful for returning a generic context menu
 */
 - (CPMenu)_menuForRow:(int)theRow
 {
-    if ([[self delegate] respondsToSelector:@selector(tableView:menuForRow:)])
-        return [[self delegate] tableView:self menuForRow:theRow];
+    var delegate = [self delegate];
+    
+    if ([delegate respondsToSelector:@selector(tableView:menuForRow:)])
+        return [delegate tableView:self menuForRow:theRow];
 
     return nil;
 }
@@ -1244,6 +1246,8 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         return nil;
 
     var row = [self rowAtPoint:[self convertPoint:[theEvent locationInWindow] fromView:nil]];
+    _clickedRow = row;
+
     return [self _menuForRow:row];
 }
 
