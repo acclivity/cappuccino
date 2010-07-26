@@ -1224,6 +1224,29 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         [scrollView _updateCornerAndHeaderView];
 }
 
+/*!
+    @ignore
+     Asks it's delegate for the context menu to display for a given row
+     The row can be -1 indicating that no actual row was clicked but the click was inside the tableview, 
+     this can useful for returning a generic context menu
+*/
+- (CPMenu)_menuForRow:(int)theRow
+{
+    if ([[self delegate] respondsToSelector:@selector(tableView:menuForRow:)])
+        return [[self delegate] tableView:self menuForRow:theRow];
+
+    return nil;
+}
+
+- (CPMenu)menuForEvent:(CPEvent)theEvent
+{
+    if ([theEvent type] !== CPRightMouseDown)
+        return nil;
+
+    var row = [self rowAtPoint:[self convertPoint:[theEvent locationInWindow] fromView:nil]];
+    return [self _menuForRow:row];
+}
+
 //Layout Support
 
 // Complexity:
