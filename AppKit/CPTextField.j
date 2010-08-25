@@ -539,7 +539,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
     var element = [self _inputElement];
 
-    [self setObjectValue:element.value];
+    [self setStringValue:element.value];
 
     CPTextFieldInputResigning = YES;
     element.blur();
@@ -639,7 +639,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 - (void)keyUp:(CPEvent)anEvent
 {
     var oldValue = [self stringValue];
-    [self _setStringValue:[self _inputElement].value];
+    [self _setObjectValue:[self _inputElement].value];
 
     if (oldValue !== [self stringValue])
     {
@@ -664,14 +664,21 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
             _isEditing = NO;
             [self textDidEndEditing:[CPNotification notificationWithName:CPControlTextDidEndEditingNotification object:self userInfo:nil]];
         }
-
+        
         [self sendAction:[self action] to:[self target]];
+        
+        if ([self formatter])
+            [self _inputElement].value = [[self formatter] stringForObjectValue:[self objectValue]];
+            
         [self selectText:nil];
 
         [[[self window] platformWindow] _propagateCurrentDOMEvent:NO];
     }
     else if ([anEvent keyCode] === CPTabKeyCode)
     {
+        if ([self formatter])
+            [self _inputElement].value = [[self formatter] stringForObjectValue:[self objectValue]];
+        
         if ([anEvent modifierFlags] & CPShiftKeyMask)
             [[self window] selectPreviousKeyView:self];
         else
@@ -717,11 +724,16 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 /*
     @ignore
+    Sets the internal object value without updating the value in the input element
 */
-- (void)_setStringValue:(id)aValue
+- (void)_setObjectValue:(id)aValue
 {
     [self willChangeValueForKey:@"objectValue"];
-    [super setObjectValue:String(aValue)];
+    
+    if ([self formatter])
+        aValue = [[self formatter] objectValueForString:aValue error:nil];
+    
+    [super setObjectValue:aValue];
     [self _updatePlaceholderState];
     [self didChangeValueForKey:@"objectValue"];
 }

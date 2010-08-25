@@ -85,6 +85,7 @@ var CPControlBlackColor     = [CPColor blackColor];
 @implementation CPControl : CPView
 {
     id                  _value;
+    CPFormatter         _formatter;
 
     // Target-Action Support
     id                  _target;
@@ -469,7 +470,15 @@ var CPControlBlackColor     = [CPColor blackColor];
 */
 - (CPString)stringValue
 {
-    return (_value === undefined || _value === nil) ? "" : String(_value);
+    var objectValue = [self objectValue];
+    
+    if (objectValue === undefined || objectValue === nil || objectValue === @"")
+        return @"";
+    
+    if ([self formatter])
+        return [[self formatter] stringForObjectValue:objectValue];
+        
+    return String(objectValue);
 }
 
 /*!
@@ -477,6 +486,10 @@ var CPControlBlackColor     = [CPColor blackColor];
 */
 - (void)setStringValue:(CPString)anObject
 {
+    // Make sure the value is not formatted if the current string value is empty,
+    if (anObject !== @"" && [self formatter])
+        anObject = [[self formatter] objectValueForString:anObject error:nil];
+    
     [self setObjectValue:anObject];
 }
 
@@ -520,7 +533,23 @@ var CPControlBlackColor     = [CPColor blackColor];
         [self setStringValue:[sender stringValue]];
 }
 
-- (void)textDidBeginEditing:(CPNotification)note
+- (void)setFormatter:(CPFormatter)aFormatter
+{
+    if (_formatter === aFormatter)
+        return;
+        
+    _formatter = aFormatter;
+    
+    [self setNeedsLayout];
+    [self setNeedsDisplay:YES];
+}
+
+- (CPFormatter)formatter
+{
+    return _formatter;
+}
+
+- (void)textDidBeginEditing:(CPNotification)note 
 {
     //this looks to prevent false propagation of notifications for other objects
     if([note object] != self)
