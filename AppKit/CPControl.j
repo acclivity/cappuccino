@@ -281,7 +281,7 @@ var CPControlBlackColor     = [CPColor blackColor];
 - (void)trackMouse:(CPEvent)anEvent
 {
     var type = [anEvent type],
-        currentLocation = [self convertPoint:[anEvent locationInWindow] fromView:nil];
+        currentLocation = [self convertPoint:[anEvent locationInWindow] fromView:nil],
         isWithinFrame = [self tracksMouseOutsideOfFrame] || CGRectContainsPoint([self bounds], currentLocation);
 
     if (type === CPLeftMouseUp)
@@ -290,7 +290,6 @@ var CPControlBlackColor     = [CPColor blackColor];
 
         _trackingMouseDownFlags = 0;
     }
-
     else
     {
         if (type === CPLeftMouseDown)
