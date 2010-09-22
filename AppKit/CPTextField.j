@@ -545,7 +545,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
     var element = [self _inputElement];
 
-    [self setStringValue:element.value];
+    if ([self stringValue] !== element.value)
+        [self _setStringValue:element.value];
 
     CPTextFieldInputResigning = YES;
     element.blur();
