@@ -744,6 +744,8 @@ var CPControlValueKey           = "CPControlValueKey",
 
     CPControlSendsActionOnEndEditingKey = "CPControlSendsActionOnEndEditingKey";
 
+    CPControlFormatterKey       = @"CPControlFormatterKey";
+
 var __Deprecated__CPImageViewImageKey   = @"CPImageViewImageKey";
 
 @implementation CPControl (CPCoding)
@@ -766,6 +768,8 @@ var __Deprecated__CPImageViewImageKey   = @"CPImageViewImageKey";
 
         [self sendActionOn:[aCoder decodeIntForKey:CPControlSendActionOnKey]];
         [self setSendsActionOnEndEditing:[aCoder decodeBoolForKey:CPControlSendsActionOnEndEditingKey]];
+
+        [self setFormatter:[aCoder decodeObjectForKey:CPControlFormatterKey]];
     }
 
     return self;
@@ -790,6 +794,8 @@ var __Deprecated__CPImageViewImageKey   = @"CPImageViewImageKey";
 
     if (_action !== NULL)
         [aCoder encodeObject:_action forKey:CPControlActionKey];
+
+    [aCoder encodeObject:_formatter forKey:CPControlFormatterKey];
 
     [aCoder encodeInt:_sendActionOn forKey:CPControlSendActionOnKey];
 }
