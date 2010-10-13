@@ -64,6 +64,7 @@
 @import "CPURLConnection.j"
 @import "CPURLRequest.j"
 @import "CPURLResponse.j"
+@import "CPUserDefaults.j"
 @import "CPUserSessionManager.j"
 @import "CPValue.j"
 @import "CPValueTransformer.j"
