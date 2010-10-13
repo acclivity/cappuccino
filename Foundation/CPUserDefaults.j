@@ -108,7 +108,7 @@ var StandardUserDefaults;
         var value = [_globalCookie value];
         if (value)
         {
-            var globalDomain = [CPKeyedUnarchiver unarchiveObjectWithData:[CPData dataWithString:decodeURIComponent(value)]];
+            var globalDomain = [CPKeyedUnarchiver unarchiveObjectWithData:[CPData dataWithRawString:decodeURIComponent(value)]];
             [_domains setObject:globalDomain forKey:CPGlobalDomain];
         }
 
@@ -116,7 +116,7 @@ var StandardUserDefaults;
         var value = [_applicationCookie value];
         if (value)
         {
-            var appDomain = [CPKeyedUnarchiver unarchiveObjectWithData:[CPData dataWithString:decodeURIComponent(value)]];
+            var appDomain = [CPKeyedUnarchiver unarchiveObjectWithData:[CPData dataWithRawString:decodeURIComponent(value)]];
             [_domains setObject:appDomain forKey:CPApplicationDomain];
         }
 
@@ -272,7 +272,7 @@ var StandardUserDefaults;
 - (void)registerDefaultsFromContentsOfFile:(CPURL)aURL
 {
     var contents = [CPURLConnection sendSynchronousRequest:[CPURLRequest requestWithURL:aURL] returningResponse:nil error:nil],
-        data = [CPData dataWithString:[contents string]],
+        data = [CPData dataWithRawString:[contents string]],
         plist = [data plistObject];
 
     [self registerDefaults:plist];
@@ -335,14 +335,14 @@ var StandardUserDefaults;
     if (globalDomain)
     {
         var data = [CPKeyedArchiver archivedDataWithRootObject:globalDomain];
-        [_globalCookie setValue:encodeURIComponent([data string]) expires:[CPDate distantFuture] domain:@"http://cappuccino.org"];
+        [_globalCookie setValue:encodeURIComponent([data rawString]) expires:[CPDate distantFuture] domain:@"http://cappuccino.org"];
     }
 
     var appDomain = [_domains objectForKey:CPApplicationDomain];
     if (appDomain)
     {
         var data = [CPKeyedArchiver archivedDataWithRootObject:appDomain];
-        [_applicationCookie setValue:encodeURIComponent([data string]) expires:[CPDate distantFuture] domain:nil];
+        [_applicationCookie setValue:encodeURIComponent([data rawString]) expires:[CPDate distantFuture] domain:nil];
     }
 
     _needsFlush = NO;
