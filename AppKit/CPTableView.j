@@ -826,6 +826,8 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
     var rowIndexes = [CPIndexSet indexSetWithIndexesInRange:CPMakeRange(0, [self numberOfRows])];
     [self reloadDataForRowIndexes:rowIndexes columnIndexes:[CPIndexSet indexSetWithIndex:columnIndex]];
+
+    [self _autosave];
 }
 
 - (CPArray)tableColumns
@@ -1757,7 +1759,8 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
         var metaData = [CPDictionary dictionaryWithJSObject:{
             @"identifier": [column identifier],
-            @"width": [column width]
+            @"width": [column width],
+            @"hidden": [column isHidden]
         }]
 
         [columnsSetup addObject:metaData];
@@ -1784,6 +1787,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
         [self _moveColumn:column toColumn:i];
         [tableColumn setWidth:[metaData objectForKey:@"width"]];
+        [tableColumn setHidden:[metaData objectForKey:@"hidden"]];
     }
 }
 
