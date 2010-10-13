@@ -843,6 +843,11 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     return _tableColumns[index];
 }
 
+- (void)_didResizeTableColumn:(CPTableColumn)theColumn
+{
+    [self _autosave];
+}
+
 //Selecting Columns and Rows
 
 /*!
