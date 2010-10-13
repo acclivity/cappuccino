@@ -3634,7 +3634,8 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
     CPTableViewUsesAlternatingBackgroundKey = @"CPTableViewUsesAlternatingBackgroundKey",
     CPTableViewAlternatingRowColorsKey      = @"CPTableViewAlternatingRowColorsKey",
     CPTableViewHeaderViewKey                = @"CPTableViewHeaderViewKey",
-    CPTableViewCornerViewKey                = @"CPTableViewCornerViewKey";
+    CPTableViewCornerViewKey                = @"CPTableViewCornerViewKey",
+    CPTableViewAutosaveNameKey              = @"CPTableViewAutosaveNameKey";
 
 @implementation CPTableView (CPCoding)
 
@@ -3685,6 +3686,9 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
         [self _init];
 
         [self viewWillMoveToSuperview:[self superview]];
+
+        // Do this as late as possible to make sure the tableview is fully configured
+        [self setAutosaveName:[aCoder decodeObjectForKey:CPTableViewAutosaveNameKey]];
     }
 
     return self;
@@ -3719,6 +3723,8 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
 
     [aCoder encodeObject:_cornerView forKey:CPTableViewCornerViewKey];
     [aCoder encodeObject:_headerView forKey:CPTableViewHeaderViewKey];
+
+    [aCoder encodeObject:_autosaveName forKey:CPTableViewAutosaveNameKey];
 }
 
 @end
