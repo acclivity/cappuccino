@@ -199,6 +199,9 @@ var StandardUserDefaults;
         [_domains setObject:domain forKey:aDomain];
     }
 
+    if ([domain objectForKey:aKey] === anObject)
+        return;
+
     [domain setObject:anObject forKey:aKey];
 
     if (aDomain === CPGlobalDomain || aDomain === CPApplicationDomain)
