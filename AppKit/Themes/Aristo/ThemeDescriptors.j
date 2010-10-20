@@ -768,25 +768,26 @@ var themedButtonValues = nil,
             ],
             PatternIsHorizontal),
 
-        placeholderColor = [CPColor colorWithCalibratedRed:189.0 / 255.0 green:199.0 / 255.0 blue:211.0 / 255.0 alpha:1.0],
+        placeholderColor = [CPColor colorWithCalibratedRed:189.0 / 255.0 green:199.0 / 255.0 blue:211.0 / 255.0 alpha:1.0];
 
-        themeValues =
-        [
-            [@"bezel-color",    bezelColor,                         CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"bezel-color",    bezelFocusedColor,                  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
-            [@"font",           [CPFont systemFontOfSize:12.0]],
+    // Global for reuse by CPSearchField
+    themedRoundedTextFieldValues =
+    [
+        [@"bezel-color",    bezelColor,                         CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"bezel-color",    bezelFocusedColor,                  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
+        [@"font",           [CPFont systemFontOfSize:12.0]],
 
-            [@"content-inset",  CGInsetMake(9.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"bezel-inset",    CGInsetMake(4.0, 4.0, 4.0, 4.0),    CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
+        [@"content-inset",  CGInsetMake(9.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"bezel-inset",    CGInsetMake(4.0, 4.0, 4.0, 4.0),    CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
 
-            [@"text-color",     placeholderColor,       CPTextFieldStateRounded | CPTextFieldStatePlaceholder],
+        [@"text-color",     placeholderColor,       CPTextFieldStateRounded | CPTextFieldStatePlaceholder],
 
-            [@"min-size",       CGSizeMake(0.0, 30.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"max-size",       CGSizeMake(-1.0, 30.0), CPTextFieldStateRounded | CPThemeStateBezeled]
-        ];
+        [@"min-size",       CGSizeMake(0.0, 30.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"max-size",       CGSizeMake(-1.0, 30.0), CPTextFieldStateRounded | CPThemeStateBezeled]
+    ];
 
-    [self registerThemeValues:themeValues forView:textfield];
+    [self registerThemeValues:themedRoundedTextFieldValues forView:textfield];
 
     [textfield setBezeled:YES];
     [textfield setBezelStyle:CPTextFieldRoundedBezel];
@@ -802,45 +803,13 @@ var themedButtonValues = nil,
 {
     var searchField = [[CPSearchField alloc] initWithFrame:CGRectMake(0.0, 0.0, 150.0, 30.0)];
 
-    bezelColor = PatternColor(
-        [
-            ["textfield-bezel-rounded-left.png", 13.0, 22.0],
-            ["textfield-bezel-rounded-center.png", 1.0, 22.0],
-            ["textfield-bezel-rounded-right.png", 13.0, 22.0]
-        ],
-        PatternIsHorizontal),
+    var cancelIcon = PatternImage(@"searchfield-cancel-icon.png", 22.0, 22.0),
+        cancelIconHighlighted = PatternImage(@"searchfield-cancel-icon-highlighted.png", 22.0, 22.0),
+        searchIcon = PatternImage(@"searchfield-search-icon.png", 25.0, 22.0),
+        disclosureIcon = PatternImage(@"searchfield-disclosure-icon.png", 25.0, 22.0);
 
-    bezelFocusedColor = PatternColor(
-        [
-            ["textfield-bezel-rounded-focused-left.png", 17.0, 30.0],
-            ["textfield-bezel-rounded-focused-center.png", 1.0, 30.0],
-            ["textfield-bezel-rounded-focused-right.png", 17.0, 30.0]
-        ],
-        PatternIsHorizontal),
-
-    placeholderColor = [CPColor colorWithCalibratedRed:189.0 / 255.0 green:199.0 / 255.0 blue:211.0 / 255.0 alpha:1.0],
-
-    cancelIcon = PatternImage(@"searchfield-cancel-icon.png", 22.0, 22.0),
-    cancelIconHighlighted = PatternImage(@"searchfield-cancel-icon-highlighted.png", 22.0, 22.0),
-
-    searchIcon = PatternImage(@"searchfield-search-icon.png", 25.0, 22.0),
-    disclosureIcon = PatternImage(@"searchfield-disclosure-icon.png", 25.0, 22.0);
-
-    themeValues =
+    var themeValues =
     [
-        [@"bezel-color",        bezelColor,                         CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"bezel-color",        bezelFocusedColor,                  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
-        [@"font",               [CPFont systemFontOfSize:12.0]],
-
-        [@"content-inset",      CGInsetMake(9.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"bezel-inset",        CGInsetMake(4.0, 4.0, 4.0, 4.0),    CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"bezel-inset",        CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
-
-        [@"text-color",         placeholderColor,       CPTextFieldStateRounded | CPTextFieldStatePlaceholder],
-
-        [@"min-size",           CGSizeMake(0.0, 30.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"max-size",           CGSizeMake(-1.0, 30.0), CPTextFieldStateRounded | CPThemeStateBezeled],
-
         [@"cancel-icon",        cancelIcon],
         [@"cancel-icon",        cancelIconHighlighted,  CPSearchFieldCancelHighlightedState],
 
@@ -848,7 +817,7 @@ var themedButtonValues = nil,
         [@"disclosure-icon",    disclosureIcon]
     ];
 
-    [self registerThemeValues:themeValues forView:searchField];
+    [self registerThemeValues:themeValues forView:searchField inherit:themedRoundedTextFieldValues];
 
     return searchField;
 }
