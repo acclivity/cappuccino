@@ -760,7 +760,7 @@ var themedButtonValues = nil,
 
 + (CPTextField)themedRoundedTextField
 {
-    var textfield = [[CPTextField alloc] initWithFrame:CGRectMake(0.0, 0.0, 60.0, 30.0)],
+    var textfield = [[CPTextField alloc] initWithFrame:CGRectMake(0.0, 0.0, 150.0, 30.0)],
         bezelColor = PatternColor(
             [
                 ["textfield-bezel-rounded-left.png", 13.0, 22.0],
@@ -781,20 +781,20 @@ var themedButtonValues = nil,
 
     // Global for reuse by CPSearchField
     themedRoundedTextFieldValues =
-        [
-            [@"bezel-color",    bezelColor,                         CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"bezel-color",    bezelFocusedColor,                  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
-            [@"font",           [CPFont systemFontOfSize:12.0]],
+    [
+        [@"bezel-color",    bezelColor,                         CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"bezel-color",    bezelFocusedColor,                  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
+        [@"font",           [CPFont systemFontOfSize:12.0]],
 
-            [@"content-inset",  CGInsetMake(9.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"bezel-inset",    CGInsetMake(4.0, 4.0, 4.0, 4.0),    CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
+        [@"content-inset",  CGInsetMake(9.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"bezel-inset",    CGInsetMake(4.0, 4.0, 4.0, 4.0),    CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
 
-            [@"text-color",     placeholderColor,       CPTextFieldStateRounded | CPTextFieldStatePlaceholder],
+        [@"text-color",     placeholderColor,       CPTextFieldStateRounded | CPTextFieldStatePlaceholder],
 
-            [@"min-size",       CGSizeMake(0.0, 30.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-            [@"max-size",       CGSizeMake(-1.0, 30.0), CPTextFieldStateRounded | CPThemeStateBezeled]
-        ];
+        [@"min-size",       CGSizeMake(0.0, 30.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
+        [@"max-size",       CGSizeMake(-1.0, 30.0), CPTextFieldStateRounded | CPThemeStateBezeled]
+    ];
 
     [self registerThemeValues:themedRoundedTextFieldValues forView:textfield];
 
@@ -810,95 +810,25 @@ var themedButtonValues = nil,
 
 + (CPSearchField)themedSearchField
 {
-    var searchField = [[CPSearchField alloc] initWithFrame:CGRectMake(0.0, 0.0, 60.0, 30.0)];
-    [self registerThemeValues:nil forView:searchField inherit:themedRoundedTextFieldValues];
+    var searchField = [[CPSearchField alloc] initWithFrame:CGRectMake(0.0, 0.0, 150.0, 30.0)];
+
+    var cancelIcon = PatternImage(@"searchfield-cancel-icon.png", 22.0, 22.0),
+        cancelIconHighlighted = PatternImage(@"searchfield-cancel-icon-highlighted.png", 22.0, 22.0),
+        searchIcon = PatternImage(@"searchfield-search-icon.png", 25.0, 22.0),
+        disclosureIcon = PatternImage(@"searchfield-disclosure-icon.png", 25.0, 22.0);
+
+    var themeValues =
+    [
+        [@"cancel-icon",        cancelIcon],
+        [@"cancel-icon",        cancelIconHighlighted,  CPSearchFieldCancelHighlightedState],
+
+        [@"search-icon",        searchIcon],
+        [@"disclosure-icon",    disclosureIcon]
+    ];
+
+    [self registerThemeValues:themeValues forView:searchField inherit:themedRoundedTextFieldValues];
+
     return searchField;
-}
-
-+ (CPTokenField)themedTokenField
-{
-    var tokenfield = [[CPTokenField alloc] initWithFrame:CGRectMake(0.0, 0.0, 60.0, 30.0)],
-
-        overrides =
-        [
-            [@"content-inset", CGInsetMake(7.0, 0.0, 7.0, 0.0)],
-            // Placeholder is displayed as regular text, not tokens; requires a different inset.
-            [@"content-inset", CGInsetMake(9.0, 0.0, 5.0, 2.0), CPTextFieldStatePlaceholder],
-            [@"content-inset", CGInsetMake(7.0, 5.0, 7.0, 6.0), CPThemeStateBezeled],
-            [@"content-inset", CGInsetMake(9.0, 7.0, 5.0, 8.0), CPThemeStateBezeled | CPTextFieldStatePlaceholder],
-        ];
-
-    [self registerThemeValues:overrides forView:tokenfield inherit:themedTextFieldValues];
-
-    return tokenfield;
-}
-
-+ (_CPTokenFieldToken)themedTokenFieldToken
-{
-    var token = [[_CPTokenFieldToken alloc] initWithFrame:CGRectMake(0.0, 0.0, 60.0, 19.0)],
-
-        bezelColor = PatternColor(
-            [
-                ["token-left.png", 11.0, 19.0],
-                ["token-center.png", 1.0, 19.0],
-                ["token-right.png", 11.0, 19.0]
-            ],
-            PatternIsHorizontal),
-
-        bezelHighlightedColor = PatternColor(
-            [
-                ["token-highlighted-left.png", 11.0, 19.0],
-                ["token-highlighted-center.png", 1.0, 19.0],
-                ["token-highlighted-right.png", 11.0, 19.0]
-            ],
-            PatternIsHorizontal),
-
-        themeValues =
-        [
-            [@"bezel-color",    bezelColor,                         CPThemeStateBezeled],
-            [@"bezel-color",    bezelHighlightedColor,              CPThemeStateBezeled | CPThemeStateHighlighted],
-
-            [@"text-color",     [CPColor colorWithRed:41.0 / 255.0 green:51.0 / 255.0 blue:64.0 / 255.0 alpha:1.0]],
-
-            [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPThemeStateBezeled],
-            [@"content-inset",  CGInsetMake(1.0, 24.0, 2.0, 16.0),  CPThemeStateBezeled],
-
-            // Minimum height == maximum height since tokens are fixed height.
-            [@"min-size",       CGSizeMake(0.0, 19.0)],
-            [@"max-size",       CGSizeMake(-1.0, 19.0)],
-
-            [@"vertical-alignment", CPCenterTextAlignment],
-        ];
-
-    [self registerThemeValues:themeValues forView:token];
-
-    return token;
-}
-
-+ (_CPTokenFieldTokenCloseButton)themedTokenFieldTokenCloseButton
-{
-    var button = [[_CPTokenFieldTokenCloseButton alloc] initWithFrame:CGRectMake(0, 0, 9, 9)],
-
-        bezelColor = PatternColor("token-close.png", 8.0, 8.0),
-        bezelHighlightedColor = PatternColor("token-close-highlighted.png", 8.0, 8.0),
-
-        themeValues =
-        [
-            [@"bezel-color",    bezelColor,                         CPThemeStateBordered],
-            [@"bezel-color",    bezelHighlightedColor,              CPThemeStateBordered | CPThemeStateHighlighted],
-
-            [@"min-size",       CGSizeMake(8.0, 8.0)],
-            [@"max-size",       CGSizeMake(8.0, 8.0)],
-
-            [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPThemeStateBordered],
-            [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPThemeStateBordered | CPThemeStateHighlighted],
-
-            [@"offset",         CGPointMake(18, 6),                 CPThemeStateBordered]
-        ];
-
-    [self registerThemeValues:themeValues forView:button];
-
-    return button;
 }
 
 + (CPRadioButton)themedRadioButton

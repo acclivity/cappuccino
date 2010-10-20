@@ -23,6 +23,8 @@
 @import "CPButton.j"
 @import "CPTextField.j"
 
+CPSearchFieldCancelHighlightedState     = CPThemeState("CPSearchFieldCancelHighlightedState");
+
 #include "CoreGraphics/CGGeometry.h"
 #include "Platform/Platform.h"
 
@@ -70,7 +72,16 @@ var RECENT_SEARCH_PREFIX = @"   ";
 
 + (CPString)themeClass
 {
-    return @"searchfield"
+    return @"searchfield";
+}
+
++ (CPDictionary)themeAttributes
+{
+    return [CPDictionary dictionaryWithJSObject:{
+        @"search-icon": [CPNull null],
+        @"disclosure-icon": [CPNull null],
+        @"cancel-icon": [CPNull null]
+    }];
 }
 
 + (void)initialize
@@ -79,10 +90,6 @@ var RECENT_SEARCH_PREFIX = @"   ";
         return;
 
     var bundle = [CPBundle bundleForClass:self];
-    CPSearchFieldSearchImage = [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"CPSearchField/CPSearchFieldSearch.png"] size:_CGSizeMake(SEARCH_BUTTON_DEFAULT_WIDTH, BUTTON_DEFAULT_HEIGHT)];
-    CPSearchFieldFindImage = [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"CPSearchField/CPSearchFieldFind.png"] size:_CGSizeMake(SEARCH_BUTTON_DEFAULT_WIDTH, BUTTON_DEFAULT_HEIGHT)];
-    CPSearchFieldCancelImage = [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"CPSearchField/CPSearchFieldCancel.png"] size:_CGSizeMake(CANCEL_BUTTON_DEFAULT_WIDTH, BUTTON_DEFAULT_HEIGHT)];
-    CPSearchFieldCancelPressedImage = [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"CPSearchField/CPSearchFieldCancelPressed.png"] size:_CGSizeMake(CANCEL_BUTTON_DEFAULT_WIDTH, BUTTON_DEFAULT_HEIGHT)];
 }
 
 - (id)initWithFrame:(CGRect)frame
@@ -162,11 +169,17 @@ var RECENT_SEARCH_PREFIX = @"   ";
 - (void)resetSearchButton
 {
     var button = [self searchButton],
-        searchButtonImage = (_searchMenuTemplate === nil) ? CPSearchFieldSearchImage : CPSearchFieldFindImage;
-    
+        hasMenu = !(_searchMenuTemplate === nil),
+        searchIcon = nil;
+
+    if (hasMenu)
+        searchIcon = [self currentValueForThemeAttribute:@"disclosure-icon"];
+    else
+        searchIcon = [self currentValueForThemeAttribute:@"search-icon"];
+
     [button setBordered:NO];
     [button setImageScaling:CPScaleToFit];
-    [button setImage:searchButtonImage];
+    [button setImage:searchIcon];
     [button setAutoresizingMask:CPViewMaxXMargin];
 }
 
@@ -208,8 +221,8 @@ var RECENT_SEARCH_PREFIX = @"   ";
     var button = [self cancelButton];
     [button setBordered:NO];
     [button setImageScaling:CPScaleToFit];
-    [button setImage:CPSearchFieldCancelImage];
-    [button setAlternateImage:CPSearchFieldCancelPressedImage];
+    [button setImage:[self valueForThemeAttribute:@"cancel-icon"]];
+    [button setAlternateImage:[self valueForThemeAttribute:@"cancel-icon" inState:CPSearchFieldCancelHighlightedState]];
     [button setAutoresizingMask:CPViewMinXMargin];
     [button setTarget:self];
     [button setAction:@selector(_searchFieldCancel:)];
