@@ -803,10 +803,10 @@ var themedButtonValues = nil,
 {
     var searchField = [[CPSearchField alloc] initWithFrame:CGRectMake(0.0, 0.0, 150.0, 30.0)];
 
-    var cancelIcon = PatternImage(@"searchfield-cancel-icon.png", 22.0, 22.0),
-        cancelIconHighlighted = PatternImage(@"searchfield-cancel-icon-highlighted.png", 22.0, 22.0),
-        searchIcon = PatternImage(@"searchfield-search-icon.png", 25.0, 22.0),
-        disclosureIcon = PatternImage(@"searchfield-disclosure-icon.png", 25.0, 22.0);
+    var cancelIcon = PatternImage(@"searchfield-cancel-icon.png", 14.0, 14.0),
+        cancelIconHighlighted = PatternImage(@"searchfield-cancel-icon-highlighted.png", 14.0, 14.0),
+        searchIcon = PatternImage(@"searchfield-search-icon.png", 13.0, 13.0),
+        disclosureIcon = PatternImage(@"searchfield-disclosure-icon.png", 18.0, 13.0);
 
     var themeValues =
     [

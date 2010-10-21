@@ -161,24 +161,29 @@ var RECENT_SEARCH_PREFIX = @"   ";
     return _searchButton;
 }
 
-/*!
-    Resets the search button to its default attributes.
-    This method resets the target, action, regular image, and pressed image. By default, when users click the search button or press the Return key, the action defined for the receiver is sent to its designated target. This method gives you a way to customize the search button for specific situations and then reset the button defaults without having to undo changes individually.
-*/
-- (void)resetSearchButton
+- (CPImage)_currentImageForSearchButton
 {
-    var button = [self searchButton],
-        hasMenu = !(_searchMenuTemplate === nil),
-        searchIcon = nil;
+    var searchIcon = nil,
+        hasMenu = !(_searchMenuTemplate === nil);
 
     if (hasMenu)
         searchIcon = [self currentValueForThemeAttribute:@"disclosure-icon"];
     else
         searchIcon = [self currentValueForThemeAttribute:@"search-icon"];
 
+    return searchIcon;
+}
+
+/*!
+    Resets the search button to its default attributes.
+    This method resets the target, action, regular image, and pressed image. By default, when users click the search button or press the Return key, the action defined for the receiver is sent to its designated target. This method gives you a way to customize the search button for specific situations and then reset the button defaults without having to undo changes individually.
+*/
+- (void)resetSearchButton
+{
+    var button = [self searchButton];
     [button setBordered:NO];
     [button setImageScaling:CPScaleToFit];
-    [button setImage:searchIcon];
+    [button setImage:[self _currentImageForSearchButton]];
     [button setAutoresizingMask:CPViewMaxXMargin];
 }
 
@@ -260,9 +265,16 @@ var RECENT_SEARCH_PREFIX = @"   ";
     @param rect The current bounding rectangle for the search button.
     Subclasses can override this method to return a new bounding rectangle for the search button. You might use this method to provide a custom layout for the search field control.
 */
-- (CGRect)searchButtonRectForBounds:(CGRect)rect
+- (CGRect)searchButtonRectForBounds:(CGRect)theRect
 {
-    return _CGRectMake(5, (_CGRectGetHeight(rect) - BUTTON_DEFAULT_HEIGHT) / 2, SEARCH_BUTTON_DEFAULT_WIDTH, BUTTON_DEFAULT_HEIGHT);
+    var icon = [self _currentImageForSearchButton];
+
+    if (!icon)
+        return _CGRectMakeZero();
+
+    var size = [icon size];
+
+    return _CGRectMake(10.0, CGRectGetMidY(theRect) - (size.height / 2.0), size.width, size.height);
 }
 
 /*!
@@ -270,9 +282,16 @@ var RECENT_SEARCH_PREFIX = @"   ";
     @param rect The updated bounding rectangle to use for the cancel button. The default value is the value passed into the rect parameter.
     Subclasses can override this method to return a new bounding rectangle for the cancel button. You might use this method to provide a custom layout for the search field control.
 */
-- (CGRect)cancelButtonRectForBounds:(CGRect)rect
+- (CGRect)cancelButtonRectForBounds:(CGRect)theRect
 {    
-    return _CGRectMake(_CGRectGetWidth(rect) - CANCEL_BUTTON_DEFAULT_WIDTH - 5, (_CGRectGetHeight(rect) - CANCEL_BUTTON_DEFAULT_WIDTH) / 2, BUTTON_DEFAULT_HEIGHT, BUTTON_DEFAULT_HEIGHT);
+    var icon = [self currentValueForThemeAttribute:@"cancel-icon"];
+
+    if (!icon)
+        return _CGRectMakeZero();
+
+    var size = [icon size];
+
+    return _CGRectMake(CGRectGetWidth(theRect) - size.width - 10.0, CGRectGetMidY(theRect) - (size.height / 2.0), size.width, size.height);
 }
 
 // Managing Menu Templates
