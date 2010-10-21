@@ -186,6 +186,8 @@ var RECENT_SEARCH_PREFIX = @"   ";
     [button setImageScaling:CPScaleToFit];
     [button setImage:[self _currentImageForSearchButton]];
     [button setAutoresizingMask:CPViewMaxXMargin];
+    [button setValue:_CGInsetMake(0.0, 0.0, 0.0, 0.0) forThemeAttribute:@"bezel-inset"];
+    [button setValue:_CGInsetMake(0.0, 0.0, 0.0, 0.0) forThemeAttribute:@"content-inset"];
 }
 
 /*!
@@ -231,6 +233,8 @@ var RECENT_SEARCH_PREFIX = @"   ";
     [button setAutoresizingMask:CPViewMinXMargin];
     [button setTarget:self];
     [button setAction:@selector(_searchFieldCancel:)];
+    [button setValue:_CGInsetMake(0.0, 0.0, 0.0, 0.0) forThemeAttribute:@"bezel-inset"];
+    [button setValue:_CGInsetMake(0.0, 0.0, 0.0, 0.0) forThemeAttribute:@"content-inset"];
 }
 
 // Custom Layout
@@ -246,17 +250,13 @@ var RECENT_SEARCH_PREFIX = @"   ";
         width = _CGRectGetWidth(rect),
         bounds = [self bounds];
     
-    if (_searchButton)
-    {
-        var searchBounds = [self searchButtonRectForBounds:bounds];
+    var searchBounds = [self searchButtonRectForBounds:bounds];
+    if (!_CGRectIsEmpty(searchBounds))
         leftOffset = _CGRectGetMaxX(searchBounds) + 2;
-    }
     
-    if (_cancelButton)
-    {
-        var cancelRect = [self cancelButtonRectForBounds:bounds];
+    var cancelRect = [self cancelButtonRectForBounds:bounds];    
+    if (!_CGRectIsEmpty(cancelRect))
         width = _CGRectGetMinX(cancelRect) - leftOffset;
-    }
     
     return _CGRectMake(leftOffset, _CGRectGetMinY(rect), width, _CGRectGetHeight(rect));
 }
@@ -274,7 +274,6 @@ var RECENT_SEARCH_PREFIX = @"   ";
         return _CGRectMakeZero();
 
     var size = [icon size];
-
     return _CGRectMake(10.0, CGRectGetMidY(theRect) - (size.height / 2.0), size.width, size.height);
 }
 
