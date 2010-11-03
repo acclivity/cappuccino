@@ -3,7 +3,7 @@
  * Foundation
  *
  * Created by Nicholas Small.
- * Copyright 2009, 280 North, Inc.
+ * Copyright 2010, 280 North, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,14 +24,12 @@
 
 
 CPArgumentDomain = @"CPArgumentDomain";
-CPApplicationDomain = @"CPApplicationDomain";
+CPApplicationDomain = [[[CPBundle mainBundle] infoDictionary] objectForKey:@"CPBundleIdentifier"] || @"CPApplicationDomain";
 CPGlobalDomain = @"CPGlobalDomain";
 CPLocaleDomain = @"CPLocaleDomain";
 CPRegistrationDomain = @"CPRegistrationDomain";
 
-CPUserDefaultsStoreCookie = @"CPUserDefaultsStoreCookie";
-CPUserDefaultsStore280N = @"CPUserDefaultsStore280N";
-CPUserDefaultsStoreCustom = @"CPUserDefaultsStoreCustom";
+CPUserDefaultsDidChangeNotification = @"CPUserDefaultsDidChangeNotification";
 
 var StandardUserDefaults;
 
@@ -39,26 +37,17 @@ var StandardUserDefaults;
     @ingroup appkit
     @class CPUserDefaults
 
-    CPUserDefaults provides a way of storing a list of user preferences.
-    Everything you store must be CPCoding compliant because it is stored as CPData.
+    CPUserDefaults provides a way of storing a list of user preferences. Everything you store must be CPCoding compliant because it is stored as CPData.
 
-    Unlike in Cocoa, CPUserDefaults is per-host by default because it stores its data in a cookie. 
-    You need to be aware that if the host does not accept cookies or if they delete their cookies, your defaults will be erased.
+    Unlike in Cocoa, CPUserDefaults is per-host by default because it stores its data in a cookie. You need to be aware that if the host does not accept
+    cookies or if they delete their cookies, your defaults will be erased.
 
-    You can prevent this using the same method you use to store per-user defaults: 
-    write your defaults out to a persistent store. Hooks are provided for this.
+    You can prevent this using the same method you use to store per-user defaults: write your defaults out to a persistent store. Hooks are provided for this.
 */
 @implementation CPUserDefaults : CPObject
 {
-    CPUserDefaultsStore     store               @accessors;
-
-    CPCookie                _globalCookie;
-    CPCookie                _applicationCookie;
-    CPDate                  _lastFlushTime;
-    BOOL                    _needsFlush;
-    CPTimer                 _flushTimer;
-
     CPDictionary            _domains;
+    CPDictionary            _stores;
 
     CPDictionary            _searchList;
     BOOL                    _searchListNeedsReload;
@@ -96,39 +85,17 @@ var StandardUserDefaults;
 
     if (self)
     {
-        store = CPUserDefaultsStoreCookie;
         _domains = [CPDictionary dictionary];
-
         [self _setupArgumentsDomain];
 
-        _globalCookie = [[CPCookie alloc] initWithName:CPGlobalDomain];
-        _applicationCookie = [[CPCookie alloc] initWithName:[[[CPBundle mainBundle] infoDictionary] objectForKey:@"CPBundleIdentifier"] || CPApplicationDomain];
+        var defaultStore = [CPUserDefaultsLocalStore supportsLocalStorage] ? CPUserDefaultsLocalStore : CPUserDefaultsCookieStore;
 
-        // Restore Global Settings
-        var value = [_globalCookie value];
-        if (value)
-        {
-            var globalDomain = [CPKeyedUnarchiver unarchiveObjectWithData:[CPData dataWithRawString:decodeURIComponent(value)]];
-            [_domains setObject:globalDomain forKey:CPGlobalDomain];
-        }
-
-        // Restore Application Settings
-        var value = [_applicationCookie value];
-        if (value)
-        {
-            var appDomain = [CPKeyedUnarchiver unarchiveObjectWithData:[CPData dataWithRawString:decodeURIComponent(value)]];
-            [_domains setObject:appDomain forKey:CPApplicationDomain];
-        }
-
-        _searchListNeedsReload = YES;
+        _stores = [CPDictionary dictionary];
+        [self setPersistentStoreClass:defaultStore forDomain:CPGlobalDomain reloadData:YES];
+        [self setPersistentStoreClass:defaultStore forDomain:CPApplicationDomain reloadData:YES];
     }
 
     return self;
-}
-
-- (CPDictionary)persistentStoreForDomain:(CPString)aDomain
-{
-
 }
 
 /*
@@ -192,23 +159,14 @@ var StandardUserDefaults;
         return;
 
     var domain = [_domains objectForKey:aDomain];
-
     if (!domain)
     {
         domain = [CPDictionary dictionary];
         [_domains setObject:domain forKey:aDomain];
     }
 
-    if ([domain objectForKey:aKey] === anObject)
-        return;
-
     [domain setObject:anObject forKey:aKey];
-
-    if (aDomain === CPGlobalDomain || aDomain === CPApplicationDomain)
-    {
-        _needsFlush = YES;
-        [self synchronizeIfNeeded];
-    }
+    [self domainDidChange:aDomain];
 
     _searchListNeedsReload = YES;
 }
@@ -231,17 +189,11 @@ var StandardUserDefaults;
         return;
 
     var domain = [_domains objectForKey:aDomain];
-
     if (!domain)
         return;
 
     [domain removeObjectForKey:aKey];
-
-    if (aDomain === CPGlobalDomain || aDomain === CPApplicationDomain)
-    {
-        _needsFlush = YES;
-        [self synchronizeIfNeeded];
-    }
+    [self domainDidChange:aDomain];
 
     _searchListNeedsReload = YES;
 }
@@ -253,7 +205,7 @@ var StandardUserDefaults;
     The contents of the registration domain are not written to disk; you need to call this method each time your application starts. You can place a plist file in the application's Resources directory and call registerDefaultsWithContentsOfFile:
 
     @param aDictionary The dictionary of keys and values you want to register.
-*/    
+*/
 - (void)registerDefaults:(CPDictionary)aDictionary
 {
     var keys = [aDictionary allKeys],
@@ -296,7 +248,6 @@ var StandardUserDefaults;
     for (var i = 0; i < count; i++)
     {
         var domain = [_domains objectForKey:dicts[i]];
-
         if (!domain)
             continue;
 
@@ -312,18 +263,67 @@ var StandardUserDefaults;
 }
 
 // Synchronization
+
 /*!
-    Write out the defaults database only if needed. Default: 2000ms interval.
+    Returns an array of currently volatile domain names.
 */
-- (void)synchronizeIfNeeded
+- (CPArray)volatileDomainNames
 {
-    if (_flushTimer)
-        window.clearTimeout(_flushTimer);
+    return [CPArgumentDomain, CPLocaleDomain, CPRegistrationDomain];
+}
 
-    if (!_needsFlush)
-        return;
+/*!
+    Returns an array of currently persistent domain names.
+*/
+- (CPArray)persistentDomainNames
+{
+    return [CPGlobalDomain, CPApplicationDomain];
+}
 
-    _flushTimer = window.setTimeout(function(){[self synchronize];}, 2000);
+/*!
+    Returns the currently used instance of CPUserDefaultStore concrete subclass for the given domain name.
+*/
+- (CPUserDefaultsStore)persistentStoreForDomain:(CPString)aDomain
+{
+    return [_stores objectForKey:aDomain];
+}
+
+/*!
+    Set the CPUserDefaultStore concrete subclass that should be instantiated for use
+    in persisting the given domain name.
+*/
+- (CPUserDefaultsStore)setPersistentStoreClass:(Class)aStoreClass forDomain:(CPString)aDomain reloadData:(BOOL)aFlag
+{
+    var currentStore = [_stores objectForKey:aDomain];
+    if (currentStore && [currentStore class] === aStoreClass)
+        return currentStore;
+
+    var store = [[aStoreClass alloc] init];
+    [store setDomain:aDomain];
+    [_stores setObject:store forKey:aDomain];
+
+    if (aFlag)
+        [self reloadDataFromStoreForDomain:aDomain];
+
+    return store;
+}
+
+- (void)reloadDataFromStoreForDomain:(CPString)aDomain
+{
+    var data = [[self persistentStoreForDomain:aDomain] data],
+        domain = data ? [CPKeyedUnarchiver unarchiveObjectWithData:data] : nil;
+
+    [_domains setObject:domain forKey:aDomain];
+
+    _searchListNeedsReload = YES;
+}
+
+- (void)domainDidChange:(CPString)aDomain
+{
+    if (aDomain === CPGlobalDomain || aDomain === CPApplicationDomain)
+        [[CPRunLoop currentRunLoop] performSelector:@selector(synchronize) target:self argument:nil order:0 modes:[CPDefaultRunLoopMode]];
+
+    [[CPNotificationCenter defaultCenter] postNotificationName:CPUserDefaultsDidChangeNotification object:self];
 }
 
 /*!
@@ -331,24 +331,19 @@ var StandardUserDefaults;
 */
 - (void)synchronize
 {
-    if (!_needsFlush)
-        return;
-
     var globalDomain = [_domains objectForKey:CPGlobalDomain];
     if (globalDomain)
     {
         var data = [CPKeyedArchiver archivedDataWithRootObject:globalDomain];
-        [_globalCookie setValue:encodeURIComponent([data rawString]) expires:[CPDate distantFuture] domain:@"http://cappuccino.org"];
+        [[self persistentStoreForDomain:CPGlobalDomain] setData:data];
     }
 
     var appDomain = [_domains objectForKey:CPApplicationDomain];
     if (appDomain)
     {
         var data = [CPKeyedArchiver archivedDataWithRootObject:appDomain];
-        [_applicationCookie setValue:encodeURIComponent([data rawString]) expires:[CPDate distantFuture] domain:nil];
+        [[self persistentStoreForDomain:CPApplicationDomain] setData:data];
     }
-
-    _needsFlush = NO;
 }
 
 // Value accessors
@@ -399,6 +394,91 @@ var StandardUserDefaults;
         return [value intValue];
 
     return value;
+}
+
+@end
+
+@implementation CPUserDefaultsStore : CPObject
+{
+    CPString    domain  @accessors;
+}
+
+- (CPData)data
+{
+    _CPRaiseInvalidAbstractInvocation(self, _cmd);
+    return nil;
+}
+
+- (void)setData:(CPData)aData
+{
+    _CPRaiseInvalidAbstractInvocation(self, _cmd);
+}
+
+@end
+
+@implementation CPUserDefaultsCookieStore : CPUserDefaultsStore
+{
+    CPCookie    _cookie;
+}
+
+- (void)setDomain:(CPString)aDomain
+{
+    if (domain === aDomain)
+        return;
+
+    domain = aDomain;
+
+    _cookie = [[CPCookie alloc] initWithName:domain];
+}
+
+- (CPData)data
+{
+    var result = [_cookie value];
+    if (!result || [result length] < 1)
+        return nil;
+
+    return [CPData dataWithRawString:decodeURIComponent(result)];
+}
+
+- (void)setData:(CPData)aData
+{
+    [_cookie setValue:encodeURIComponent([aData rawString]) expires:[CPDate distantFuture] domain:window.location.href.hostname];
+}
+
+@end
+
+@implementation CPUserDefaultsLocalStore : CPUserDefaultsStore
+{
+}
+
++ (BOOL)supportsLocalStorage
+{
+    return !!window.localStorage;
+}
+
+- (id)init
+{
+    if (![[self class] supportsLocalStorage])
+    {
+        [CPException raise:@"UnsupportedFeature" reason:@"Browser does not support localStorage for CPUserDefaultsLocalStore"];
+        return self = nil;
+    }
+
+    return self = [super init];
+}
+
+- (CPData)data
+{
+    var result = localStorage.getItem(domain);
+    if (!result || [result length] < 1)
+        return nil;
+
+    return [CPData dataWithRawString:decodeURIComponent(result)];
+}
+
+- (void)setData:(CPData)aData
+{
+    localStorage.setItem(domain, encodeURIComponent([aData rawString]));
 }
 
 @end
