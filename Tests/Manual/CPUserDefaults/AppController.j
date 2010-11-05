@@ -1,6 +1,6 @@
 
 @import <AppKit/CPTableView.j>
-@import "ESTableHeaderView.j"
+
 
 @implementation AppController : CPObject
 {
@@ -13,8 +13,6 @@
 
     var scrollView = [[CPScrollView alloc] initWithFrame:CGRectMake(0.0, 0.0, 400.0, 300.0)],
         tableView = [[CPTableView alloc] initWithFrame:CGRectMake(0.0, 0.0, 400.0, 300.0)];
-
-    [tableView setHeaderView:[[ESTableHeaderView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 23.0)]];
 
     [scrollView setDocumentView:tableView];
     [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
