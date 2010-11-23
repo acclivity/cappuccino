@@ -798,10 +798,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)_setCurrentValueIsPlaceholder:(BOOL)isPlaceholder
 {
-    // The initial _currentValueIsPlaceholder is null so convert it to NO for comparison purposes.
-    if (!!_currentValueIsPlaceholder === isPlaceholder)
-        return;
-
     if (isPlaceholder)
     {
         // Save the original placeholder value so we can restore it later
@@ -814,7 +810,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         [self setPlaceholderString:[self stringValue]];
         [self setStringValue:@""];
     }
-    else
+    else if (_originalPlaceholderString)
     {
         // Restore the original placeholder, the actual textfield value is already correct
         // because it was set using setValue:forKey:
