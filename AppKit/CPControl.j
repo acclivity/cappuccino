@@ -519,7 +519,7 @@ var CPControlBlackColor     = [CPColor blackColor];
 {
     // Make sure the value is not formatted if the current string value is empty,
     if (anObject !== @"" && [self formatter])
-        anObject = [[self formatter] objectValueForString:anObject error:nil];
+        anObject = [[self formatter] objectValueForString:anObject];
     
     [self setObjectValue:anObject];
 }
