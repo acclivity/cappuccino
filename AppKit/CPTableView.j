@@ -1953,7 +1953,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         var columnToResize = _tableColumns[count],
             newSize = MAX(0.0, superviewSize.width - CGRectGetMinX([self rectOfColumn:count]) - _intercellSpacing.width);
 
-        [columnToResize setWidth:newSize];
+        [columnToResize _tryToResizeToWidth:newSize];
     }
 
     [self setNeedsLayout];
@@ -3083,7 +3083,8 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
                     [dataView setEditable:YES];
                     [dataView setSendsActionOnEndEditing:YES];
                     [dataView setSelectable:YES];
-                    [dataView selectText:nil]; // Doesn't seem to actually work (yet?).
+                    [dataView selectText:nil];
+                    [dataView setDelegate:self];
                 }
 
                 [dataView setTarget:self];
@@ -3136,13 +3137,27 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
 /*!
     @ignore
+    The action for any dataview that supports editing, this will only be called when the value was changed
 */
 - (void)_commitDataViewObjectValue:(id)sender
 {
     [_dataSource tableView:self setObjectValue:[sender objectValue] forTableColumn:sender.tableViewEditedColumnObj row:sender.tableViewEditedRowIndex];
+}
 
-    if ([sender respondsToSelector:@selector(setEditable:)])
-        [sender setEditable:NO];
+/*!
+    @ignore
+    Blur notification handler for editing textfields, this will always be called when a textfield loses focus
+    This method is responsible for restoring the dataview to it's non editable state
+*/
+- (void)controlTextDidBlur:(CPNotification)theNotification
+{
+    var dataView = [theNotification object];
+
+    if ([dataView respondsToSelector:@selector(setEditable:)])
+        [dataView setEditable:NO];
+
+    if ([dataView respondsToSelector:@selector(setSelectable:)])
+        [dataView setSelectable:NO];
 }
 
 /*!
