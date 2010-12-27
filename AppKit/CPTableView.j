@@ -631,8 +631,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     [_headerView setNeedsDisplay:YES];
     [_headerView setNeedsLayout];
 
-    // height above the rows will change
-    [self noteHeightOfRowsWithIndexesChanged:[CPIndexSet  indexSetWithIndexesInRange:CPMakeRange(0,[self numberOfRows])]];
+    [self reloadData];
 }
 
 /*!
@@ -1500,15 +1499,19 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 // O(1)
 /*!
     Returns a CGRect with the location and size of the column
+    If aColumnIndex lies outside the range of the table columns a CGZeroRect is returned
     @param aColumnIndex the index of the column you want the rect of
 */
 - (CGRect)rectOfColumn:(CPInteger)aColumnIndex
 {
     aColumnIndex = +aColumnIndex;
 
+    if (aColumnIndex < 0 || aColumnIndex >= NUMBER_OF_COLUMNS())
+        return _CGRectMakeZero();
+
     var column = [[self tableColumns] objectAtIndex:aColumnIndex];
 
-    if ([column isHidden] || aColumnIndex < 0 || aColumnIndex >= NUMBER_OF_COLUMNS())
+    if ([column isHidden])
         return _CGRectMakeZero();
 
     UPDATE_COLUMN_RANGES_IF_NECESSARY();
@@ -1714,7 +1717,11 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 {
     if (_implementedDelegateMethods & CPTableViewDelegate_tableView_heightOfRow_)
     {
-            return idx = [_cachedRowHeights indexOfObject:aPoint sortedByFunction:function(aPoint, rowCache) {
+            return idx = [_cachedRowHeights indexOfObject:aPoint
+                                            inSortedRange:nil
+                                                  options:0
+                                          usingComparator:function(aPoint, rowCache)
+                    {
                           var upperBound = rowCache.heightAboveRow;
 
                           if (aPoint.y < upperBound)
@@ -1724,7 +1731,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
                               return CPOrderedDescending;
 
                           return CPOrderedSame;
-                      }];
+                    }];
     }
 
     var y = aPoint.y,
@@ -1770,6 +1777,25 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
     var mask = _columnAutoResizingStyle;
 
+    // should we actually do some resizing?
+    if (!_lastColumnShouldSnap)
+    {
+        // did the clip view intersect the old tablesize?
+        var superview = [self superview];
+
+        if (!superview || ![superview isKindOfClass:[CPClipView class]])
+            return;
+
+        var superviewWidth = [superview bounds].size.width,
+            lastColumnMaxX = _CGRectGetMaxX([self rectOfColumn:[self numberOfColumns] -1]);
+
+        // Fix me: this fires on the table setup at times
+        if (lastColumnMaxX >= superviewWidth && lastColumnMaxX <= aSize.width || lastColumnMaxX <= superviewWidth && lastColumnMaxX >= aSize.width)
+            _lastColumnShouldSnap = YES;
+        else
+            return;
+    }
+
     if (mask === CPTableViewUniformColumnAutoresizingStyle)
        [self _resizeAllColumnUniformlyWithOldSize:aSize];
     else if (mask === CPTableViewLastColumnOnlyAutoresizingStyle)
@@ -1814,10 +1840,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
             newWidth = superviewSize.width - totalWidth;
 
         newWidth += [columnToResize width];
-        newWidth = MAX([columnToResize minWidth], newWidth);
-        newWidth = MIN([columnToResize maxWidth], newWidth);
-
-        [columnToResize setWidth:FLOOR(newWidth)];
+        [columnToResize _tryToResizeToWidth:newWidth];
     }
 
     [self setNeedsLayout];
@@ -1830,74 +1853,59 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 */
 - (void)_resizeAllColumnUniformlyWithOldSize:(CGSize)oldSize
 {
+    // what we care about is the superview clip rect
+    // FIX ME: if it's not in a scrollview this doesn't really work
     var superview = [self superview];
 
-    if (!superview)
+    if (!superview || ![superview isKindOfClass:[CPClipView class]])
         return;
-
-    var superviewSize = [superview bounds].size;
 
     UPDATE_COLUMN_RANGES_IF_NECESSARY();
 
-    var count = NUMBER_OF_COLUMNS(),
-        visColumns = [[CPArray alloc] init],
-        buffer = 0.0;
+    var superviewWidth = [superview bounds].size.width,
+        count = NUMBER_OF_COLUMNS(),
+        resizableColumns = [CPIndexSet indexSet],
+        remainingSpace = 0.0,
+        i = 0;
 
-    // Fixme: cache resizable columns because they won't changes betwwen two calls to this method.
-    for (var i = 0; i < count; i++)
+    // find resizable columns
+    // FIX ME: we could cache resizableColumns after this loop and reuse it durring the resize
+    for (; i < count; i++)
     {
         var tableColumn = _tableColumns[i];
         if (![tableColumn isHidden] && ([tableColumn resizingMask] & CPTableColumnAutoresizingMask))
-            [visColumns addObject:i];
+            [resizableColumns addIndex:i];
     }
 
-    // redefine count
-    count = [visColumns count];
+    var maxXofColumns = _CGRectGetMaxX([self rectOfColumn:[resizableColumns lastIndex]]),
+        remainingSpace = superviewWidth - maxXofColumns,
+        resizeableColumnsCount = [resizableColumns count],
+        proportionate = 0;
 
-    //if there are columns
-    if (count > 0)
+    while (remainingSpace && resizeableColumnsCount)
     {
-        var maxXofColumns = CGRectGetMaxX([self rectOfColumn:visColumns[count - 1]]);
+        // Divy out the space.
+        proportionate += remainingSpace / resizeableColumnsCount;
 
-        // If the x value of the end of the last column is between the current bounds and the previous bounds we should snap.
-        if (!_lastColumnShouldSnap && (maxXofColumns >= superviewSize.width && maxXofColumns <= oldSize.width || maxXofColumns <= superviewSize.width && maxXofColumns >= oldSize.width))
+        // Reset the remaining space to 0
+        remainingSpace = 0.0;
+
+        var index = CPNotFound;
+
+        while ((index = [resizableColumns indexGreaterThanIndex:index]) !== CPNotFound)
         {
-            //set the snap mask
-            _lastColumnShouldSnap = YES;
-            //then we need to make sure everything is set correctly.
-            [self _resizeAllColumnUniformlyWithOldSize:CGSizeMake(maxXofColumns, 0)];
+            var item = _tableColumns[index],
+                proposedWidth = [item width] + proportionate,
+                resizeLeftovers = [item _tryToResizeToWidth:proposedWidth];
+
+            if (resizeLeftovers)
+            {
+                [resizableColumns removeIndex:index];
+
+                remainingSpace += resizeLeftovers;
+            }
         }
-
-        if (!_lastColumnShouldSnap)
-            return;
-
-        // FIX ME: This is wrong because this should continue to resize all columns
-        // If the last column reaches it's max/min it will simply stop resizing,
-        // correct behavior is to resize all columns until they reach their min/max
-
-        for (var i = 0; i < count; i++)
-        {
-            var column = visColumns[i],
-                columnToResize = _tableColumns[column],
-                currentBuffer = buffer / (count - i),
-                realNewWidth = ([columnToResize width] / oldSize.width * [superview bounds].size.width) + currentBuffer,
-                newWidth = realNewWidth;
-            newWidth = MAX([columnToResize minWidth], newWidth);
-            newWidth = MIN([columnToResize maxWidth], newWidth);
-            buffer -= currentBuffer;
-
-            // the buffer takes into account the min/max width of the column
-            buffer += realNewWidth - newWidth;
-
-            [columnToResize setWidth:newWidth];
-        }
-
-        // if there is space left over that means column resize was too long or too short
-        if (buffer !== 0)
-            _lastColumnShouldSnap = NO;
     }
-
-    [self setNeedsLayout];
 }
 
 /*!
@@ -1939,18 +1947,13 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     //decrement the counter until we get to the last row that's not hidden
     while (count-- && [_tableColumns[count] isHidden]) ;
 
-    //if the last row exists
+    //if the last column exists
     if (count >= 0)
     {
         var columnToResize = _tableColumns[count],
             newSize = MAX(0.0, superviewSize.width - CGRectGetMinX([self rectOfColumn:count]) - _intercellSpacing.width);
 
-        if (newSize > 0)
-        {
-            newSize = MAX([columnToResize minWidth], newSize);
-            newSize = MIN([columnToResize maxWidth], newSize);
-            [columnToResize setWidth:newSize];
-        }
+        [columnToResize newWidth:newSize];
     }
 
     [self setNeedsLayout];
@@ -4164,7 +4167,6 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         else
             newSelection = [CPIndexSet indexSetWithIndex:aRow];
     }
-
     else if (_allowsMultipleSelection)
     {
         newSelection = [CPIndexSet indexSetWithIndexesInRange:CPMakeRange(MIN(aRow, _selectionAnchorRow), ABS(aRow - _selectionAnchorRow) + 1)];
@@ -4172,10 +4174,8 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
                                 ((_lastSelectedRow == [_selectedRowIndexes lastIndex] && aRow > _lastSelectedRow) ||
                                 (_lastSelectedRow == [_selectedRowIndexes firstIndex] && aRow < _lastSelectedRow));
     }
-
     else if (aRow >= 0 && aRow < _numberOfRows)
         newSelection = [CPIndexSet indexSetWithIndex:aRow];
-
     else
         newSelection = [CPIndexSet indexSet];
 
@@ -4218,6 +4218,8 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         return;
 
     [self selectRowIndexes:newSelection byExtendingSelection:shouldExtendSelection];
+
+    _lastSelectedRow = [newSelection containsIndex:aRow] ? aRow : [newSelection lastIndex];
 }
 
 /*!
@@ -4275,10 +4277,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
         // but Cocoa doesn't handle that situation either.
         if ([self numberOfRows] !== 0)
         {
-            if (character === CPUpArrowFunctionKey)
-                [self _moveSelectionUp:anEvent];
-            else
-                [self _moveSelectionDown:anEvent]
+            [self _moveSelectionWithEvent:anEvent upward:(character === CPUpArrowFunctionKey)];
 
             return;
         }
@@ -4295,99 +4294,82 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 
 /*!
     @ignore
+    Selection behaviour depends on two things
+    _lastSelectedRow and the anchored selection (The last row selected by itself)
 */
-- (void)_moveSelectionDown:(CPEvent)theEvent
+- (void)_moveSelectionWithEvent:(CPEvent)theEvent upward:(BOOL)shouldGoUpward
 {
-    if (_implementedDelegateMethods & CPTableViewDelegate_selectionShouldChangeInTableView_ &&
-        ![_delegate selectionShouldChangeInTableView:self])
+    if (_implementedDelegateMethods & CPTableViewDelegate_selectionShouldChangeInTableView_ && ![_delegate selectionShouldChangeInTableView:self])
         return;
+    var selectedIndexes = [self selectedRowIndexes];
 
-    if ([[self selectedRowIndexes] count] > 0)
+    if ([selectedIndexes count] > 0)
     {
-        var extend = NO;
+        var extend = (([theEvent modifierFlags] & CPShiftKeyMask) && _allowsMultipleSelection),
+            i = [self selectedRow];
 
-        if (([theEvent modifierFlags] & CPShiftKeyMask) && _allowsMultipleSelection)
-            extend = YES;
-
-        var i = [[self selectedRowIndexes] lastIndex];
-        if (i < [self numberOfRows] - 1)
-            i++; //set index to the next row after the last row selected
+        shouldGoUpward ? i-- : i++;
     }
     else
     {
         var extend = NO;
         //no rows are currently selected
         if ([self numberOfRows] > 0)
-            var i = 0; //select the first row
+            var i = shouldGoUpward ? [self numberOfRows] - 1 : 0; // if we select upward select the last row, otherwise select the first row
     }
+
+    if (i >= [self numberOfRows] || i < 0)
+        return;
 
 
     if (_implementedDelegateMethods & CPTableViewDelegate_tableView_shouldSelectRow_)
     {
 
-        while ((![_delegate tableView:self shouldSelectRow:i]) && i < [self numberOfRows])
-        {
-            //check to see if the row can be selected if it can't be then see if the next row can be selected
-            i++;
-        }
+        while (![_delegate tableView:self shouldSelectRow:i] && (i < [self numberOfRows] || i > 0))
+            shouldGoUpward ? i-- : i++; //check to see if the row can be selected if it can't be then see if the next row can be selected
 
         //if the index still can be selected after the loop then just return
          if (![_delegate tableView:self shouldSelectRow:i])
              return;
     }
 
-    [self selectRowIndexes:[CPIndexSet indexSetWithIndex:i] byExtendingSelection:extend];
-
-    if (i >= 0)
-        [self scrollRowToVisible:i];
-}
-
-/*!
-    @ignore
-*/
-- (void)_moveSelectionUp:(CPEvent)theEvent
-{
-    if (_implementedDelegateMethods & CPTableViewDelegate_selectionShouldChangeInTableView_ &&
-        ![_delegate selectionShouldChangeInTableView:self])
-        return;
-
-    if ([[self selectedRowIndexes] count] > 0)
+    // if we go upward and see that this row is already selected we should deselect the row below
+    if ([selectedIndexes containsIndex:i] && extend)
     {
-         var extend = NO;
+        // the row we're on is the last to be selected
+        var differedLastSelectedRow = i;
 
-         if (([theEvent modifierFlags] & CPShiftKeyMask) && _allowsMultipleSelection)
-           extend = YES;
+        // no remove the one before/after it
+        shouldGoUpward ? i++  : i--;
 
-          var i = [[self selectedRowIndexes] firstIndex];
-          if (i > 0)
-              i--; //set index to the prev row before the first row selected
+        [selectedIndexes removeIndex:i];
+
+        //we're going to replace the selection
+        extend = NO;
+    }
+    else if (extend)
+    {
+        if ([selectedIndexes containsIndex:i])
+        {
+            i = shouldGoUpward ? [selectedIndexes firstIndex] -1 : [selectedIndexes lastIndex] + 1;
+            i = MIN(MAX(i,0), [self numberOfRows]-1);
+        }
+
+        [selectedIndexes addIndex:i];
+        var differedLastSelectedRow = i;
     }
     else
     {
-      var extend = NO;
-      //no rows are currently selected
-        if ([self numberOfRows] > 0)
-            var i = [self numberOfRows] - 1; //select the first row
-     }
+        selectedIndexes = [CPIndexSet indexSetWithIndex:i];
+        var differedLastSelectedRow = i;
+    }
 
+    [self selectRowIndexes:selectedIndexes byExtendingSelection:extend];
 
-     if (_implementedDelegateMethods & CPTableViewDelegate_tableView_shouldSelectRow_)
-     {
+    // we differ because selectRowIndexes: does its own thing which would set the wrong index
+    _lastSelectedRow = differedLastSelectedRow;
 
-          while ((![_delegate tableView:self shouldSelectRow:i]) && i > 0)
-          {
-              //check to see if the row can be selected if it can't be then see if the prev row can be selected
-              i--;
-          }
-
-          //if the index still can be selected after the loop then just return
-           if (![_delegate tableView:self shouldSelectRow:i])
-               return;
-     }
-
-     [self selectRowIndexes:[CPIndexSet indexSetWithIndex:i] byExtendingSelection:extend];
-
-     if (i >= 0)
+    if (i !== CPNotFound)
         [self scrollRowToVisible:i];
 }
 
