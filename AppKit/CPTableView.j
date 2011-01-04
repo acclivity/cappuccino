@@ -724,9 +724,9 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     Returns an enumerated value for the selection highlight style.
 
     Valid values are:
-        CPTableViewDraggingDestinationFeedbackStyleNone
-        CPTableViewDraggingDestinationFeedbackStyleRegular
-        CPTableViewDraggingDestinationFeedbackStyleSourceList
+        CPTableViewSelectionHighlightStyleNone
+        CPTableViewSelectionHighlightStyleRegular
+        CPTableViewSelectionHighlightStyleSourceList
 */
 - (unsigned)selectionHighlightStyle
 {
@@ -738,9 +738,9 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     This value can also affect the way the tableview draws feedback when the user is dragging.
 
     Valid values are:
-        CPTableViewDraggingDestinationFeedbackStyleNone
-        CPTableViewDraggingDestinationFeedbackStyleRegular
-        CPTableViewDraggingDestinationFeedbackStyleSourceList
+        CPTableViewSelectionHighlightStyleNone
+        CPTableViewSelectionHighlightStyleRegular
+        CPTableViewSelectionHighlightStyleSourceList
 */
 - (void)setSelectionHighlightStyle:(unsigned)aSelectionHighlightStyle
 {
@@ -3144,7 +3144,6 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
             tableColumn = _tableColumns[column],
             tableColumnUID = [tableColumn UID],
             dataViewsForTableColumn = _dataViewsForTableColumns[tableColumnUID],
-            columnRange = _tableColumnRanges[column],
             rowIndex = 0,
             rowsCount = rowArray.length;
 
@@ -4696,6 +4695,7 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
     [CPTimer scheduledTimerWithTimeInterval:0.19 callback:hideCallback repeats:NO];
     [CPTimer scheduledTimerWithTimeInterval:0.27 callback:showCallback repeats:NO];
 }
+
 @end
 
 @implementation _CPColumnDragView : CPView
@@ -4733,4 +4733,5 @@ var CPTableViewDataSourceKey                = @"CPTableViewDataSourceKey",
 
     CGContextStrokeLineSegments(context, points, 2);
 }
+
 @end
