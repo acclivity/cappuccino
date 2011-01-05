@@ -685,7 +685,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
             _isEditing = NO;
             [self textDidEndEditing:[CPNotification notificationWithName:CPControlTextDidEndEditingNotification object:self userInfo:nil]];
         }
-        
+
         [self sendAction:[self action] to:[self target]];
 
         if ([self formatter])
@@ -736,6 +736,19 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     return [super objectValue];
 }
 
+- (CPString)stringValue
+{
+    var objectValue = [self objectValue];
+
+    if (objectValue === undefined || objectValue === nil || objectValue === @"")
+        return @"";
+
+    if ([self formatter] && !_currentValueIsPlaceholder)
+        return [[self formatter] stringForObjectValue:objectValue];
+
+    return String(objectValue);
+}
+
 /*
     @ignore
     Sets the internal object value without updating the value in the input element
@@ -743,10 +756,10 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 - (void)_setObjectValue:(id)aValue
 {
     [self willChangeValueForKey:@"objectValue"];
-    
+
     if ([self formatter])
         aValue = [[self formatter] objectValueForString:aValue error:nil];
-    
+
     [super setObjectValue:aValue];
     [self _updatePlaceholderState];
     [self didChangeValueForKey:@"objectValue"];
@@ -804,6 +817,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)_setCurrentValueIsPlaceholder:(BOOL)isPlaceholder
 {
+    _currentValueIsPlaceholder = isPlaceholder;
+
     if (isPlaceholder)
     {
         // Save the original placeholder value so we can restore it later
@@ -822,8 +837,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         // because it was set using setValue:forKey:
         [self setPlaceholderString:_originalPlaceholderString];
     }
-
-    _currentValueIsPlaceholder = isPlaceholder;
 }
 
 /*!
