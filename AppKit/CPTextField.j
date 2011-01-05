@@ -757,14 +757,14 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 */
 - (void)_setStringValue:(id)aValue
 {
-    [self willChangeValueForKey:@"objectValue"];
+    [self willChangeValueForKey:@"stringValue"];
 
     if ([self formatter])
         aValue = [[self formatter] objectValueForString:aValue error:nil];
 
     [super setObjectValue:aValue];
     [self _updatePlaceholderState];
-    [self didChangeValueForKey:@"objectValue"];
+    [self didChangeValueForKey:@"stringValue"];
 }
 
 - (void)setObjectValue:(id)aValue
@@ -828,7 +828,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
             _originalPlaceholderString = [self placeholderString];
 
         // Set the current string value as the current placeholder and clear the string value
-        [self setPlaceholderString:[self stringValue]];
+        [self setPlaceholderString:[self objectValue]];
         [self setStringValue:@""];
     }
     else if (_originalPlaceholderString !== undefined)
