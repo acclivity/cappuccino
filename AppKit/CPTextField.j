@@ -258,6 +258,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         [self setStringValue:@""];
         [self setPlaceholderString:@""];
 
+        _originalPlaceholderString = undefined;
+
         _sendActionOn = CPKeyUpMask | CPKeyDownMask;
 
         [self setValue:CPLeftTextAlignment forThemeAttribute:@"alignment"];
@@ -551,7 +553,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     var element = [self _inputElement];
 
     if ([self stringValue] !== element.value)
-        [self _setObjectValue:element.value];
+        [self _setStringValue:element.value];
 
     CPTextFieldInputResigning = YES;
     element.blur();
@@ -654,7 +656,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 - (void)keyUp:(CPEvent)anEvent
 {
     var oldValue = [self stringValue];
-    [self _setObjectValue:[self _inputElement].value];
+    [self _setStringValue:[self _inputElement].value];
 
     if (oldValue !== [self stringValue])
     {
@@ -751,9 +753,9 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 /*
     @ignore
-    Sets the internal object value without updating the value in the input element
+    Sets the internal string value without updating the value in the input element
 */
-- (void)_setObjectValue:(id)aValue
+- (void)_setStringValue:(id)aValue
 {
     [self willChangeValueForKey:@"objectValue"];
 
@@ -817,8 +819,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)_setCurrentValueIsPlaceholder:(BOOL)isPlaceholder
 {
-    _currentValueIsPlaceholder = isPlaceholder;
-
     if (isPlaceholder)
     {
         // Save the original placeholder value so we can restore it later
@@ -831,12 +831,25 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         [self setPlaceholderString:[self stringValue]];
         [self setStringValue:@""];
     }
-    else if (_originalPlaceholderString)
+    else if (_originalPlaceholderString !== undefined)
     {
         // Restore the original placeholder, the actual textfield value is already correct
         // because it was set using setValue:forKey:
         [self setPlaceholderString:_originalPlaceholderString];
+        _originalPlaceholderString = undefined;
     }
+
+    _currentValueIsPlaceholder = isPlaceholder;
+}
+
+- (void)unbind:(CPString)theBinding
+{
+    if (theBinding === CPValueBinding)
+    {
+        [self _setCurrentValueIsPlaceholder:NO];
+    }
+
+    [super unbind:theBinding];
 }
 
 /*!
@@ -1293,6 +1306,8 @@ var CPTextFieldIsEditableKey            = "CPTextFieldIsEditableKey",
         [self setAlignment:[aCoder decodeIntForKey:CPTextFieldAlignmentKey]];
 
         [self setPlaceholderString:[aCoder decodeObjectForKey:CPTextFieldPlaceholderStringKey]];
+        _originalPlaceholderString = undefined;
+
 
         // Make sure the frame is big enough
         var minSize = [self _minimumFrameSize];
