@@ -142,18 +142,20 @@ var CPControlBlackColor     = [CPColor blackColor];
     }
 }
 
-- (void)_reverseSetBinding
++ (Class)_binderClassForBinding:(CPString)theBinding
 {
-    var theBinding = [CPKeyValueBinding getBinding:CPValueBinding forObject:self];
-    [theBinding reverseSetValueFor:@"objectValue"];
+    if (theBinding === CPValueBinding)
+        return [_CPValueBinder class];
+
+    return [super _binderClassForBinding:theBinding];
 }
 
-- (void)_replacementKeyPathForBinding:(CPString)aBinding
+- (void)_reverseSetBinding
 {
-    if (aBinding === @"value")
-        return @"objectValue";
+    var binderClass = [[self class] _binderClassForBinding:CPValueBinding],
+        theBinding = [binderClass getBinding:CPValueBinding forObject:self];
 
-    return [super _replacementKeyPathForBinding:aBinding];
+    [theBinding reverseSetValueFor:@"objectValue"];
 }
 
 - (id)initWithFrame:(CGRect)aFrame
@@ -502,13 +504,13 @@ var CPControlBlackColor     = [CPColor blackColor];
 - (CPString)stringValue
 {
     var objectValue = [self objectValue];
-    
+
     if (objectValue === undefined || objectValue === nil || objectValue === @"")
         return @"";
-    
+
     if ([self formatter])
         return [[self formatter] stringForObjectValue:objectValue];
-        
+
     return String(objectValue);
 }
 
@@ -520,7 +522,7 @@ var CPControlBlackColor     = [CPColor blackColor];
     // Make sure the value is not formatted if the current string value is empty,
     if (anObject !== @"" && [self formatter])
         anObject = [[self formatter] objectValueForString:anObject];
-    
+
     [self setObjectValue:anObject];
 }
 
@@ -568,9 +570,9 @@ var CPControlBlackColor     = [CPColor blackColor];
 {
     if (_formatter === aFormatter)
         return;
-        
+
     _formatter = aFormatter;
-    
+
     [self setNeedsLayout];
     [self setNeedsDisplay:YES];
 }
@@ -580,7 +582,7 @@ var CPControlBlackColor     = [CPColor blackColor];
     return _formatter;
 }
 
-- (void)textDidBeginEditing:(CPNotification)note 
+- (void)textDidBeginEditing:(CPNotification)note
 {
     //this looks to prevent false propagation of notifications for other objects
     if ([note object] != self)
@@ -740,7 +742,7 @@ var CPControlValueKey           = "CPControlValueKey",
     CPControlActionKey          = "CPControlActionKey",
     CPControlSendActionOnKey    = "CPControlSendActionOnKey",
 
-    CPControlSendsActionOnEndEditingKey = "CPControlSendsActionOnEndEditingKey";
+    CPControlSendsActionOnEndEditingKey = "CPControlSendsActionOnEndEditingKey",
 
     CPControlFormatterKey       = @"CPControlFormatterKey";
 
