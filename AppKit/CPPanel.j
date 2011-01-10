@@ -26,7 +26,7 @@
 CPOKButton      = 1;
 CPCancelButton  = 0;
 
-/*! 
+/*!
     @ingroup appkit
     @class CPPanel
 
@@ -93,6 +93,14 @@ CPDocModalWindowMask    = 1 << 6;
 - (void)setBecomesKeyOnlyIfNeeded:(BOOL)shouldBecomeKeyOnlyIfNeeded
 {
     _becomesKeyOnlyIfNeeded = shouldBecomeKeyOnlyIfNeeded
+}
+
+- (void)makeKeyWindow
+{
+    if ([self becomesKeyOnlyIfNeeded] && [self firstResponder] !== self && [[self firstResponder] needsPanelToBecomeKey])
+        return;
+
+    [super makeKeyWindow];
 }
 
 - (BOOL)worksWhenModal
