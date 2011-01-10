@@ -129,6 +129,7 @@ CPColorPickerViewHeight = 370;
         [self setLevel:CPFloatingWindowLevel];
 
         [self setFloatingPanel:YES];
+        [self setWorksWhenModal:YES];
         [self setBecomesKeyOnlyIfNeeded:YES];
 
         [self setMinSize:CGSizeMake(219.0, 342.0)];
@@ -343,6 +344,7 @@ CPColorPickerViewHeight = 370;
     [_previewLabel setStringValue:"Preview:"];
     [_previewLabel setTextColor:[CPColor blackColor]];
     [_previewLabel setAlignment:CPRightTextAlignment];
+    [_previewLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     // FIXME: http://280north.lighthouseapp.com/projects/13294-cappuccino/tickets/25-implement-cpbox
     var swatchBox = [[CPView alloc] initWithFrame:CGRectMake(76, TOOLBAR_HEIGHT + 10 + PREVIEW_HEIGHT + 5, CGRectGetWidth(bounds) - 86, SWATCH_HEIGHT + 2.0)];
@@ -361,12 +363,14 @@ CPColorPickerViewHeight = 370;
     [_swatchLabel setStringValue: "Swatches:"];
     [_swatchLabel setTextColor:[CPColor blackColor]];
     [_swatchLabel setAlignment:CPRightTextAlignment];
+    [_swatchLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
 
     var opacityLabel = [[CPTextField alloc] initWithFrame: CPRectMake(10, TOOLBAR_HEIGHT + PREVIEW_HEIGHT + 35, 60, 20)];
     [opacityLabel setStringValue: "Opacity:"];
     [opacityLabel setTextColor:[CPColor blackColor]];
     [opacityLabel setAlignment:CPRightTextAlignment];
+    [opacityLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _opacitySlider = [[CPSlider alloc] initWithFrame:CGRectMake(76, TOOLBAR_HEIGHT + PREVIEW_HEIGHT + 34, CGRectGetWidth(bounds) - 86, 20.0)];
 

@@ -58,14 +58,9 @@
     CPTextField _brightnessValue;
 }
 
-- (id)initWithPickerMask:(int)mask colorPanel:(CPColorPanel)owningColorPanel
+- (void)initView
 {
-    return [super initWithPickerMask:mask colorPanel: owningColorPanel];
-}
-
-- (id)initView
-{
-    aFrame = CGRectMake(0, 0, CPColorPickerViewWidth, CPColorPickerViewHeight);    
+    aFrame = CGRectMake(0, 0, CPColorPickerViewWidth, CPColorPickerViewHeight);
 
     _contentView = [[CPView alloc] initWithFrame:aFrame];
     [_contentView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
@@ -73,10 +68,12 @@
     _rgbLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 10, 100, 20)];
     [_rgbLabel setStringValue: "Red, Green, Blue"];
     [_rgbLabel setTextColor:[CPColor blackColor]];
+    [_rgbLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _redLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 35, 15, 20)];
     [_redLabel setStringValue: "R"];
     [_redLabel setTextColor:[CPColor blackColor]];
+    [_redLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _redSlider = [[CPSlider alloc] initWithFrame: CGRectMake(15, 35, aFrame.size.width - 70, 20)];
     [_redSlider setMaxValue: 1.0];
@@ -96,6 +93,7 @@
     _greenLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 58, 15, 20)];
     [_greenLabel setStringValue: "G"];
     [_greenLabel setTextColor:[CPColor blackColor]];
+    [_greenLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _greenSlider = [[CPSlider alloc] initWithFrame: CGRectMake(15, 58, aFrame.size.width - 70, 20)];
     [_greenSlider setMaxValue: 1.0];
@@ -115,6 +113,7 @@
     _blueLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 81, 15, 20)];
     [_blueLabel setStringValue: "B"];
     [_blueLabel setTextColor:[CPColor blackColor]];
+    [_blueLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _blueSlider = [[CPSlider alloc] initWithFrame: CGRectMake(15, 81, aFrame.size.width - 70, 20)];
     [_blueSlider setMaxValue: 1.0];
@@ -134,10 +133,12 @@
     _hsbLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 120, 190, 20)];
     [_hsbLabel setStringValue: "Hue, Saturation, Brightness"];
     [_hsbLabel setTextColor:[CPColor blackColor]];
+    [_hsbLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _hueLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 145, 15, 20)];
     [_hueLabel setStringValue: "H"];
     [_hueLabel setTextColor:[CPColor blackColor]];
+    [_hueLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _hueSlider = [[CPSlider alloc] initWithFrame: CGRectMake(15, 145, aFrame.size.width - 70, 20)];
     [_hueSlider setMaxValue: 359.0];
@@ -157,6 +158,7 @@
     _saturationLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 168, 15, 20)];
     [_saturationLabel setStringValue: "S"];
     [_saturationLabel setTextColor:[CPColor blackColor]];
+    [_saturationLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _saturationSlider = [[CPSlider alloc] initWithFrame: CGRectMake(15, 168, aFrame.size.width - 70, 20)];
     [_saturationSlider setMaxValue: 100.0];
@@ -176,6 +178,7 @@
     _brightnessLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 191, 15, 20)];
     [_brightnessLabel setStringValue: "B"];
     [_brightnessLabel setTextColor:[CPColor blackColor]];
+    [_brightnessLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     _brightnessSlider = [[CPSlider alloc] initWithFrame: CGRectMake(15, 191, aFrame.size.width - 70, 20)];
     [_brightnessSlider setMaxValue: 100.0];
@@ -195,6 +198,7 @@
     _hexLabel = [[CPTextField alloc] initWithFrame: CGRectMake(0, 230, 30, 20)];
     [_hexLabel setStringValue: "Hex"];
     [_hexLabel setTextColor:[CPColor blackColor]];
+    [_hexLabel setValue:[CPFont systemFontOfSize:12.0] forThemeAttribute:@"font"];
 
     //hex input box
     _hexValue = [[CPTextField alloc] initWithFrame: CGRectMake(32, 225, 80, 29)];
@@ -240,7 +244,7 @@
     return (mode == CPSliderColorPickerMode) ? YES : NO;
 }
 
--(void)sliderChanged:(id)sender
+- (void)sliderChanged:(id)sender
 {
     var newColor,
         colorPanel = [self colorPanel],
@@ -274,7 +278,7 @@
     [colorPanel setColor: newColor];
 }
 
--(void)setColor:(CPColor)aColor
+- (void)setColor:(CPColor)aColor
 {
     [self updateRGBSliders: aColor];
     [self updateHSBSliders: aColor];
@@ -282,7 +286,7 @@
     [self updateLabels];
 }
 
--(void)updateHSBSliders:(CPColor)aColor
+- (void)updateHSBSliders:(CPColor)aColor
 {
     var hsb = [aColor hsbComponents];
 
