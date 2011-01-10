@@ -51,6 +51,9 @@ var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
     CPColor                 _textColor;
     CPFont                  _font;
 
+    BOOL                    _isItalic;
+    BOOL                    _isUnderlined;
+
     CPColor                 _textShadowColor;
     CGSize                  _textShadowOffset;
 
@@ -255,6 +258,38 @@ var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
 - (CPFont)font
 {
     return _font;
+}
+
+- (void)setItalic:(BOOL)isItalic
+{
+    if (_isItalic === isItalic)
+        return;
+
+    _isItalic = isItalic;
+    _flags |= _CPImageAndTextViewFontChangedFlag;
+
+    [self setNeedsLayout];
+}
+
+- (BOOL)isItalic
+{
+    return _isItalic;
+}
+
+- (void)setUnderlined:(BOOL)isUnderlined
+{
+    if (_isUnderlined === isUnderlined)
+        return;
+
+    _isUnderlined = isUnderlined;
+    _flags |= _CPImageAndTextViewFontChangedFlag;
+
+    [self setNeedsLayout];
+}
+
+- (BOOL)isUnderlined
+{
+    return _isUnderlined;
 }
 
 - (void)setTextShadowColor:(CPColor)aColor
@@ -464,6 +499,8 @@ var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
         {
             var fontStyle = [_font ? _font : [CPFont systemFontOfSize:12.0] cssString];
             textStyle.font = fontStyle;
+            textStyle.fontStyle = [self isItalic] ? @"italic" : @"normal";
+            textStyle.textDecoration = [self isUnderlined] ? @"underline" : @"none";
 
             if (shadowStyle)
                 shadowStyle.font = fontStyle;
