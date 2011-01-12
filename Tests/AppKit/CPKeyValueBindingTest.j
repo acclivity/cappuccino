@@ -229,6 +229,7 @@
 
     [arrayController setSelectionIndex:0];
     [self assert:@"yellow" equals:[textField stringValue] message:"text field string value should be 'yellow'"];
+
     // Cocoa doesn't do this
     // [self assert:@"cheese" equals:[textField placeholderString] message:"text field placeholder should be restored"];
 
