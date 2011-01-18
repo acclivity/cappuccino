@@ -197,7 +197,7 @@ CPButtonImageOffset   = 3.0;
 */
 - (void)setObjectValue:(id)anObjectValue
 {
-    if (!anObjectValue || anObjectValue === @"" || ([anObjectValue intValue] === 0))
+    if (!anObjectValue || anObjectValue === @"" || anObjectValue === [CPNull null] || ([anObjectValue intValue] === 0))
         anObjectValue = CPOffState;
 
     else if (![anObjectValue isKindOfClass:[CPNumber class]])
