@@ -742,6 +742,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         [self textDidEndEditing:[CPNotification notificationWithName:CPControlTextDidEndEditingNotification object:self userInfo:nil]];
     }
 
+    // Call set string value to make sure the object value is updated and formatted
+    [self setStringValue:[self _inputElement].value];
     [self sendAction:[self action] to:[self target]];
     [self selectText:nil];
 
@@ -840,10 +842,12 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 */
 - (void)_setStringValue:(id)aValue
 {
+    CPLog.debug(@"%@ %@ %@", self, CPStringFromSelector(_cmd), aValue);
+
     [self willChangeValueForKey:@"stringValue"];
 
     if ([self formatter])
-        aValue = [[self formatter] objectValueForString:aValue error:nil];
+        aValue = [[self formatter] objectValueForString:aValue];
 
     [super setObjectValue:aValue];
     [self _updatePlaceholderState];
@@ -857,7 +861,12 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 #if PLATFORM(DOM)
 
     if (CPTextFieldInputOwner === self || [[self window] firstResponder] === self)
+    {
+        if ([self formatter])
+            aValue = [[self formatter] stringForObjectValue:aValue];
+
         [self _inputElement].value = aValue;
+    }
 #endif
 
     [self _updatePlaceholderState];
