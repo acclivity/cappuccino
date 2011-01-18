@@ -870,6 +870,17 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     else
         _dirtyTableColumnRangeIndex = MIN(NUMBER_OF_COLUMNS() - 1, _dirtyTableColumnRangeIndex);
 
+    if ([[self sortDescriptors] count] > 0)
+    {
+        var mainSortDescriptor = [[self sortDescriptors] objectAtIndex:0];
+
+        if (aTableColumn === [self _tableColumnForSortDescriptor:mainSortDescriptor])
+        {
+            var image = [mainSortDescriptor ascending] ? [self _tableHeaderSortImage] : [self _tableHeaderReverseSortImage];
+            [self setIndicatorImage:image inTableColumn:aTableColumn];
+        }
+    }
+
     [self tile];
     [self setNeedsLayout];
 }
@@ -2873,7 +2884,7 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
 /*!
     Sets the table view's CPSortDescriptors objects in an array.
 
-    @param sortDescriptors an array of sort descritors.
+    @param sortDescriptors an array of sort descriptors.
 */
 - (void)setSortDescriptors:(CPArray)sortDescriptors
 {
@@ -2910,6 +2921,9 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
     [self setIndicatorImage:image inTableColumn:newColumn];
 
     [self _sendDataSourceSortDescriptorsDidChange:oldSortDescriptors];
+
+    var binderClass = [[self class] _binderClassForBinding:@"sortDescriptors"];
+    [[binderClass getBinding:@"sortDescriptors" forObject:self] reverseSetValueFor:@"sortDescriptors"];
 }
 
 /*!
@@ -3593,15 +3607,15 @@ CPTableViewFirstColumnOnlyAutoresizingStyle = 5;
             CGContextClosePath(context);
 
             CGContextBeginPath(context);
-            CGContextMoveToPoint(context, minX, minY);
-            CGContextAddLineToPoint(context, maxX, minY);
+            CGContextMoveToPoint(context, minX, minY + .5);
+            CGContextAddLineToPoint(context, maxX, minY + .5);
             CGContextClosePath(context);
             CGContextSetStrokeColor(context, (shouldUseGroupGradient) ? topGroupLineColor : topLineColor);
             CGContextStrokePath(context);
 
             CGContextBeginPath(context);
-            CGContextMoveToPoint(context, minX, maxY);
-            CGContextAddLineToPoint(context, maxX, maxY - 1);
+            CGContextMoveToPoint(context, minX, maxY - .5);
+            CGContextAddLineToPoint(context, maxX, maxY - .5);
             CGContextClosePath(context);
             CGContextSetStrokeColor(context, (shouldUseGroupGradient) ? bottomGroupLineColor : bottomLineColor);
             CGContextStrokePath(context);
