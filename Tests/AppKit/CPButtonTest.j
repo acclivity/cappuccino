@@ -130,6 +130,9 @@
     [button setObjectValue:CPMixedState];
     [self assert:CPMixedState equals:[button objectValue] message:@"Mixed state is allowed, object value should be CPMixedState"];
     [self assert:CPMixedState equals:[button state] message:@"Mixed state is allowed, state should be CPMixedState"];
+
+    [button setObjectValue:[CPNull null]];
+    [self assert:CPOffState equals:[button objectValue] message:@"[CPNull null] should be CPOffState"];
 }
 
 @end
