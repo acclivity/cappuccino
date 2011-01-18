@@ -205,7 +205,7 @@ var RECENT_SEARCH_PREFIX = @"   ";
         [_cancelButton setFrame:[self cancelButtonRectForBounds:[self bounds]]];
         [_cancelButton setAutoresizingMask:CPViewMinXMargin];
         [_cancelButton setTarget:self];
-        [_cancelButton setAction:@selector(_searchFieldCancel:)];
+        [_cancelButton setAction:@selector(cancelOperation:)];   
         [self _updateCancelButtonVisibility];
         [self addSubview:_cancelButton];
     }
@@ -233,7 +233,7 @@ var RECENT_SEARCH_PREFIX = @"   ";
     [button setAlternateImage:[self valueForThemeAttribute:@"cancel-icon" inState:CPSearchFieldCancelHighlightedState]];
     [button setAutoresizingMask:CPViewMinXMargin];
     [button setTarget:self];
-    [button setAction:@selector(_searchFieldCancel:)];
+    [button setAction:@selector(cancelOperation:)];
     [button setValue:_CGInsetMake(0.0, 0.0, 0.0, 0.0) forThemeAttribute:@"bezel-inset"];
     [button setValue:_CGInsetMake(0.0, 0.0, 0.0, 0.0) forThemeAttribute:@"content-inset"];
 }
@@ -716,7 +716,7 @@ var RECENT_SEARCH_PREFIX = @"   ";
     [_partialStringTimer invalidate];
 }
 
-- (void)_searchFieldCancel:(id)sender
+- (void)cancelOperation:(id)sender
 {
     [self setObjectValue:@""];
     [self _sendPartialString];
