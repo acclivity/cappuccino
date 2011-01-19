@@ -844,8 +844,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 */
 - (void)_setStringValue:(id)aValue
 {
-    CPLog.debug(@"%@ %@ %@", self, CPStringFromSelector(_cmd), aValue);
-
     [self willChangeValueForKey:@"stringValue"];
 
     if ([self formatter])
