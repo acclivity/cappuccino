@@ -289,6 +289,7 @@ var supportsNativeDragAndDrop = [CPPlatform supportsDragAndDrop];
     _DOMFocusElement.style.opacity = "0";
     _DOMFocusElement.style.filter = "alpha(opacity=0)";
     _DOMFocusElement.className = "cpdontremove";
+    _DOMFocusElement.setAttribute('unselectable', 'on');
 
     _DOMBodyElement.appendChild(_DOMFocusElement);
 
@@ -316,6 +317,7 @@ var supportsNativeDragAndDrop = [CPPlatform supportsDragAndDrop];
     _DOMEventGuard.style.zIndex = "999";
     _DOMEventGuard.style.display = "none";
     _DOMEventGuard.className = "cpdontremove";
+    _DOMEventGuard.setAttribute('unselectable', 'on');
     _DOMBodyElement.appendChild(_DOMEventGuard);
 
     // We get scrolling deltas from this element
@@ -330,11 +332,13 @@ var supportsNativeDragAndDrop = [CPPlatform supportsDragAndDrop];
     _DOMScrollingElement.style.opacity = "0";
     _DOMScrollingElement.style.filter = "alpha(opacity=0)";
     _DOMScrollingElement.className = "cpdontremove";
+    _DOMScrollingElement.setAttribute('unselectable', 'on');
     _DOMBodyElement.appendChild(_DOMScrollingElement);
 
     var _DOMInnerScrollingElement = theDocument.createElement("div");
     _DOMInnerScrollingElement.style.width = "400px";
     _DOMInnerScrollingElement.style.height = "400px";
+    _DOMInnerScrollingElement.setAttribute('unselectable', 'on');
     _DOMScrollingElement.appendChild(_DOMInnerScrollingElement);
 
     // Set an initial scroll offset
