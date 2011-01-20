@@ -389,6 +389,8 @@ var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
 - (void)layoutSubviews
 {
 #if PLATFORM(DOM)
+    _DOMElement.setAttribute('unselectable', 'on');
+
     var needsDOMTextElement = _imagePosition !== CPImageOnly && ([_text length] > 0),
         hasDOMTextElement = !!_DOMTextElement;
 
@@ -407,6 +409,7 @@ var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
         else
         {
             _DOMTextElement = document.createElement("div");
+            _DOMTextElement.setAttribute('unselectable', 'on');
 
             var textStyle = _DOMTextElement.style;
 
@@ -444,6 +447,7 @@ var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
         else
         {
             _DOMTextShadowElement = document.createElement("div");
+            _DOMTextShadowElement.setAttribute('unselectable', 'on');
 
             var shadowStyle = _DOMTextShadowElement.style;
 
@@ -585,6 +589,7 @@ var _CPimageAndTextViewFrameSizeChangedFlag         = 1 << 0,
         else
         {
             _DOMImageElement = document.createElement("img");
+            _DOMImageElement.setAttribute('unselectable', 'on');
 
             if ([CPPlatform supportsDragAndDrop])
             {
