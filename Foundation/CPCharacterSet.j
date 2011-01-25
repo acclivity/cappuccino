@@ -231,6 +231,7 @@ var _builtInCharacterSets = {};
 
 - (BOOL)hasMemberInPlane:(int)plane // TO DO : when inverted
 {
+    // FIXME: range is undefined... don't know what's supposed to be going on here.
     // the highest Unicode plane we reach.
     // (There are 65536 code points in each plane.)
     var maxPlane = Math.floor((range.start + range.length - 1) / 65536); // FIXME: should iterate _ranges
@@ -349,13 +350,13 @@ _CPCharacterSetTrimAtEnd        = 1 << 2;
 @implementation CPString (CPCharacterSetAdditions)
 
 /*!
-    Tokenizes the receiver string using the charactes
+    Tokenizes the receiver string using the characters
     in a given set. For example, if the receiver is:
     \c "Baku baku to jest  skład."
     and the set is [CPCharacterSet whitespaceCharacterSet]
     the returned array would contain:
     <pre> ["Baku", "baku", "to", "jest", "", "skład."] </pre>
-    Adjacent occurences of the separator characters produce empty strings in the result.
+    Adjacent occurrences of the separator characters produce empty strings in the result.
     @author Arkadiusz Młynarczyk <arek@tupux.com>
     @param A character set containing the characters to use to split the receiver. Must not be nil.
     @return An CPArray object containing substrings from the receiver that have been divided by characters in separator.

@@ -37,9 +37,9 @@ CPTableColumnUserResizingMask   = 1 << 1;
     @class CPTableColumn
 
     A CPTableColumn contains a dataview to display for its column of the CPTableView.
-    A CPTableColumn determines its own size constrains and resizing behaviour.
+    A CPTableColumn determines its own size constrains and resizing behavior.
 
-    The default dataview is a CPTextField but you can set it to any view you'd like. See -setDataView: for documentaion including theme states.
+    The default dataview is a CPTextField but you can set it to any view you'd like. See -setDataView: for documentation including theme states.
 
     To customize the text of the column header you can simply call setStringValue: on the headerview of a table column.
     For example: [[myTableColumn headerView] setStringValue:"My Title"];
@@ -63,11 +63,6 @@ CPTableColumnUserResizingMask   = 1 << 1;
     CPString            _headerToolTip;
 
     BOOL _disableResizingPosting @accessors(property=disableResizingPosting);
-}
-
-+ (Class)_binderClassForBinding:(CPString)theBinding
-{
-    return [CPBinder class];
 }
 
 /*!
@@ -200,7 +195,7 @@ CPTableColumnUserResizingMask   = 1 << 1;
 }
 
 /*!
-    Sets the minimum width of the column. 
+    Sets the minimum width of the column.
     Default value is 10.
 */
 - (void)setMinWidth:(float)aMinWidth
@@ -228,7 +223,7 @@ CPTableColumnUserResizingMask   = 1 << 1;
 }
 
 /*!
-    Sets the maximum width of the table column. 
+    Sets the maximum width of the table column.
     Default value is: 1000000
 */
 - (void)setMaxWidth:(float)aMaxWidth
@@ -257,8 +252,8 @@ CPTableColumnUserResizingMask   = 1 << 1;
 
 /*!
 <pre>
-    Set the resizing mask of the column. 
-    By default the column can be resized automatically with the tableview and manaully by the user
+    Set the resizing mask of the column.
+    By default the column can be resized automatically with the tableview and manually by the user
 
     Possible masking values are:
     CPTableColumnNoResizing
@@ -281,7 +276,7 @@ CPTableColumnUserResizingMask   = 1 << 1;
 }
 
 /*!
-    Sizes the column to fix the column header text. 
+    Sizes the column to fix the column header text.
 */
 - (void)sizeToFit
 {
@@ -322,7 +317,7 @@ CPTableColumnUserResizingMask   = 1 << 1;
 /*!
     Returns the headerview for the column.
 
-    In order to change the text of the headerview for a column you should call setStringValue: on the headerview. 
+    In order to change the text of the headerview for a column you should call setStringValue: on the headerview.
     For example: [[myTableColumn headerView] setStringValue:"My Column"];
 */
 - (CPView)headerView
@@ -340,7 +335,7 @@ CPTableColumnUserResizingMask   = 1 << 1;
     When you set a dataview and it is added to the tableview the theme state will be set to CPThemeStateTableDataView
     When the dataview becomes selected the theme state will be set to CPThemeStateSelectedDataView.
 
-    If the dataview shows up in a group row of the tablview the theme state will be set to CPThemeStateGroupRow.
+    If the dataview shows up in a group row of the tableview the theme state will be set to CPThemeStateGroupRow.
 
     You should overide setThemeState: and unsetThemeState: to handle these theme state changes in your dataview.
 
@@ -479,7 +474,7 @@ CPTableColumnUserResizingMask   = 1 << 1;
 }
 
 /*!
-    Sets the sort descriptor prototype for the column. 
+    Sets the sort descriptor prototype for the column.
 */
 - (void)setSortDescriptorPrototype:(CPSortDescriptor)aSortDescriptor
 {
@@ -495,7 +490,7 @@ CPTableColumnUserResizingMask   = 1 << 1;
 }
 
 /*!
-    If NO the tablecolumn will no longer be visisble in the tableview
+    If NO the tablecolumn will no longer be visible in the tableview
     If YES the tablecolumn will be visible in the tableview.
 */
 - (void)setHidden:(BOOL)shouldBeHidden
@@ -552,15 +547,39 @@ CPTableColumnUserResizingMask   = 1 << 1;
 
 @end
 
+@implementation CPTableColumnValueBinder : CPBinder
+{
+}
+
+- (void)setValueFor:(CPString)aBinding
+{
+    var tableView = [_source tableView],
+        column = [[tableView tableColumns] indexOfObjectIdenticalTo:_source],
+        rowIndexes = [CPIndexSet indexSetWithIndexesInRange:CPMakeRange(0, [tableView numberOfRows])],
+        columnIndexes = [CPIndexSet indexSetWithIndex:column];
+
+    [tableView reloadDataForRowIndexes:rowIndexes columnIndexes:columnIndexes];
+}
+
+@end
+
 @implementation CPTableColumn (Bindings)
 
++ (id)_binderClassForBinding:(CPString)aBinding
+{
+    if (aBinding == CPValueBinding)
+        return [CPTableColumnValueBinder class];
+
+    return [super _binderClassForBinding:aBinding];
+}
+
 /*!
-    Binds the reciever to an object.
+    Binds the receiver to an object.
 
     @param CPString aBinding - The binding you wish to make. Typically CPValueBinding.
-    @param id anObject - The object to bind the reciever to.
-    @param CPString aKeyPath - The key path you wish to bind the reciver to.
-    @param CPDictionary options - A dictionary of options for the binding. This paramater is optional, pass nil if you do not wish to use it. 
+    @param id anObject - The object to bind the receiver to.
+    @param CPString aKeyPath - The key path you wish to bind the receiver to.
+    @param CPDictionary options - A dictionary of options for the binding. This parameter is optional, pass nil if you do not wish to use it.
 */
 - (void)bind:(CPString)aBinding toObject:(id)anObject withKeyPath:(CPString)aKeyPath options:(CPDictionary)options
 {
@@ -623,14 +642,6 @@ CPTableColumnUserResizingMask   = 1 << 1;
 //{
 //    return nil;
 //}
-
-/*!
-    @ignore
-*/
-- (void)setValue:(CPArray)content
-{
-    [[self tableView] reloadData];
-}
 
 @end
 
