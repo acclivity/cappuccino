@@ -809,7 +809,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)sendAction:(SEL)anAction to:(id)anObject
 {
-    // Don't reverse set our empty value
     [self _reverseSetBinding];
 
     [CPApp sendAction:anAction to:anObject from:self];
@@ -830,7 +829,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     if (objectValue === undefined || objectValue === nil || objectValue === @"")
         return @"";
 
-    if ([self formatter] && !_currentValueIsPlaceholder)
+    if ([self formatter])
         return [[self formatter] stringForObjectValue:objectValue];
 
     return String(objectValue);
