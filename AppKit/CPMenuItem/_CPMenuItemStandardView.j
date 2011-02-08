@@ -146,6 +146,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     [_imageAndTextView setFont:[_menuItem font] || _font];
     [_imageAndTextView setVerticalAlignment:CPCenterVerticalTextAlignment];
     [_imageAndTextView setImage:[_menuItem image]];
+    [_imageAndTextView setImageOffset:5.0]; // Should be themeable
     [_imageAndTextView setText:[_menuItem title]];
     [_imageAndTextView setTextColor:[self textColor]];
     [_imageAndTextView setTextShadowColor:[self textShadowColor]];
