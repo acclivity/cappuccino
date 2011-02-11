@@ -233,7 +233,7 @@ var STICKY_TIME_INTERVAL        = 500,
         if ([activeMenuContainer isMenuBar])
             var newMenuOrigin = CGPointMake(CGRectGetMinX(activeItemRect), CGRectGetMaxY(activeItemRect));
         else
-            var newMenuOrigin = CGPointMake(CGRectGetMaxX(activeItemRect), CGRectGetMinY(activeItemRect));
+            var newMenuOrigin = CGPointMake(CGRectGetMaxX(activeItemRect) - 8.0, CGRectGetMinY(activeItemRect) - 10.0);
 
         newMenuOrigin = [activeMenuContainer convertBaseToGlobal:newMenuOrigin];
 
@@ -563,7 +563,7 @@ var STICKY_TIME_INTERVAL        = 500,
             if ([activeMenuContainer isMenuBar])
                 var newMenuOrigin = CGPointMake(CGRectGetMinX(activeItemRect), CGRectGetMaxY(activeItemRect));
             else
-                var newMenuOrigin = CGPointMake(CGRectGetMaxX(activeItemRect), CGRectGetMinY(activeItemRect));
+                var newMenuOrigin = CGPointMake(CGRectGetMaxX(activeItemRect) - 8.0, CGRectGetMinY(activeItemRect) - 7.0);
 
             newMenuOrigin = [activeMenuContainer convertBaseToGlobal:newMenuOrigin];
 

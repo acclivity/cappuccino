@@ -28,6 +28,8 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     CGSize                  _minSize @accessors(readonly, property=minSize);
     BOOL                    _isDirty;
 
+    CPView                  _contentView;
+
     CPImageView             _stateView;
     _CPImageAndTextView     _imageAndTextView;
     _CPImageAndTextView     _keyEquivalentView;
@@ -41,8 +43,8 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
     SUBMENU_INDICATOR_COLOR = [CPColor grayColor];
 
-    _CPMenuItemSelectionColor =  [CPColor colorWithCalibratedRed:95.0 / 255.0 green:131.0 / 255.0 blue:185.0 / 255.0 alpha:1.0];
-    _CPMenuItemTextShadowColor = [CPColor colorWithCalibratedRed:26.0 / 255.0 green: 73.0 / 255.0 blue:109.0 / 255.0 alpha:1.0];
+    _CPMenuItemSelectionColor =  [CPColor colorWithCalibratedRed:87.0 / 255.0 green:127.0 / 255.0 blue:215.0 / 255.0 alpha:1.0];
+    _CPMenuItemTextShadowColor = [CPColor colorWithWhite:0.0 alpha:0.15];
     
     var bundle = [CPBundle bundleForClass:self];
     
@@ -72,18 +74,22 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
     if (self)
     {
+        _contentView = [[CPView alloc] initWithFrame:CGRectInset([self bounds], 7.0, 0.0)];
+        [_contentView setBackgroundColor:nil];
+        [self addSubview:_contentView];
+
         _stateView = [[CPImageView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
 
         [_stateView setImageScaling:CPScaleNone];
 
-        [self addSubview:_stateView];
+        [_contentView addSubview:_stateView];
 
         _imageAndTextView = [[_CPImageAndTextView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
 
         [_imageAndTextView setImagePosition:CPImageLeft];
         [_imageAndTextView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
 
-        [self addSubview:_imageAndTextView];
+        [_contentView addSubview:_imageAndTextView];
 
         _keyEquivalentView = [[_CPImageAndTextView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
 
@@ -91,16 +97,17 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
         [_keyEquivalentView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
         [_keyEquivalentView setAutoresizingMask:CPViewMinXMargin];
 
-        [self addSubview:_keyEquivalentView];
+        [_contentView addSubview:_keyEquivalentView];
 
         _submenuIndicatorView = [[_CPMenuItemSubmenuIndicatorView alloc] initWithFrame:CGRectMake(0.0, 0.0, 8.0, 10.0)];
 
         [_submenuIndicatorView setColor:SUBMENU_INDICATOR_COLOR];
         [_submenuIndicatorView setAutoresizingMask:CPViewMinXMargin];
 
-        [self addSubview:_submenuIndicatorView];
+        [_contentView addSubview:_submenuIndicatorView];
 
         [self setAutoresizingMask:CPViewWidthSizable];
+        [_contentView setAutoresizingMask:CPViewWidthSizable]
     }
 
     return self;
@@ -195,7 +202,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
         var submenuViewFrame = [_submenuIndicatorView frame];
 
-        submenuViewFrame.origin.x = x;
+        submenuViewFrame.origin.x = CGRectGetWidth([_contentView bounds]) - CGRectGetWidth(submenuViewFrame) - 3.0;
 
         x += CGRectGetWidth(submenuViewFrame);
         height = MAX(height, CGRectGetHeight(submenuViewFrame));
@@ -228,6 +235,10 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     [self setAutoresizesSubviews:NO];
     [self setFrameSize:_minSize];
     [self setAutoresizesSubviews:YES];
+
+    [self setAutoresizesSubviews:NO];
+    [_contentView setFrame:CGRectInset([self bounds], 7.0, 0.0)];
+    [self setAutoresizesSubviews:YES];
 }
 
 - (void)highlight:(BOOL)shouldHighlight
@@ -238,7 +249,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
     if (shouldHighlight)
     {
-        [self setBackgroundColor:_CPMenuItemSelectionColor];
+        [_contentView setBackgroundColor:_CPMenuItemSelectionColor];
 
         [_imageAndTextView setImage:[_menuItem alternateImage] || [_menuItem image]];
         [_imageAndTextView setTextColor:[CPColor whiteColor]];
@@ -250,7 +261,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     }
     else
     {
-        [self setBackgroundColor:nil];
+        [_contentView setBackgroundColor:nil];
 
         [_imageAndTextView setImage:[_menuItem image]];
         [_imageAndTextView setTextColor:[self textColor]];

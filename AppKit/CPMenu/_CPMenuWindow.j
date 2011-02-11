@@ -143,17 +143,17 @@ var STICKY_TIME_INTERVAL        = 500,
         if (aBackgroundStyle == _CPMenuWindowPopUpBackgroundStyle)
             color = [CPColor colorWithPatternImage:[[CPNinePartImage alloc] initWithImageSlices:
                 [
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded0.png"] size:CGSizeMake(4.0, 4.0)],
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow1.png"] size:CGSizeMake(1.0, 4.0)],
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded2.png"] size:CGSizeMake(4.0, 4.0)],
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded0.png"] size:CGSizeMake(7.0, 7.0)],
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow1.png"] size:CGSizeMake(1.0, 7.0)],
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded2.png"] size:CGSizeMake(7.0, 7.0)],
 
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow3.png"] size:CGSizeMake(4.0, 1.0)],
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow3.png"] size:CGSizeMake(7.0, 1.0)],
                     [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow4.png"] size:CGSizeMake(1.0, 1.0)],
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow5.png"] size:CGSizeMake(4.0, 1.0)],
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow5.png"] size:CGSizeMake(7.0, 1.0)],
 
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded6.png"] size:CGSizeMake(4.0, 4.0)],
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow7.png"] size:CGSizeMake(1.0, 4.0)],
-                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded8.png"] size:CGSizeMake(4.0, 4.0)]
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded6.png"] size:CGSizeMake(7.0, 7.0)],
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindow7.png"] size:CGSizeMake(1.0, 7.0)],
+                    [[CPImage alloc] initWithContentsOfFile:[bundle pathForResource:@"_CPMenuWindow/_CPMenuWindowRounded8.png"] size:CGSizeMake(7.0, 7.0)]
                 ]]];
 
         else if (aBackgroundStyle == _CPMenuWindowMenuBarBackgroundStyle)
@@ -464,7 +464,7 @@ var STICKY_TIME_INTERVAL        = 500,
     if (x < CGRectGetMinX(bounds) || x > CGRectGetMaxX(bounds))
         return CPNotFound;
 
-    var y = aPoint.y,
+    var y = aPoint.y + 5.0,
         low = 0,
         high = _visibleMenuItemInfos.length - 1;
 
@@ -522,7 +522,7 @@ var STICKY_TIME_INTERVAL        = 500,
         [view setShowsStateColumn:showsStateColumn];
         [view synchronizeWithMenuItem];
 
-        [view setFrameOrigin:CGPointMake(0.0, y)];
+        [view setFrameOrigin:CGPointMake(0.0, y + 5.0)];
 
         [self addSubview:view];
 
@@ -543,7 +543,7 @@ var STICKY_TIME_INTERVAL        = 500,
     }
 
     [self setAutoresizesSubviews:NO];
-    [self setFrameSize:CGSizeMake(maxWidth, y)];
+    [self setFrameSize:CGSizeMake(maxWidth, y + 10.0)];
     [self setAutoresizesSubviews:YES];
 }
 
