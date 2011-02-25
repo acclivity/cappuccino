@@ -850,7 +850,7 @@ var themedButtonValues = nil,
 
 + (CPTextField)themedRoundedTextField
 {
-    var textfield = [[CPTextField alloc] initWithFrame:CGRectMake(0.0, 0.0, 150.0, 30.0)],
+    var textfield = [[CPTextField alloc] initWithFrame:CGRectMake(0.0, 0.0, 60.0, 30.0)],
         bezelColor = PatternColor(
             [
                 ["textfield-bezel-rounded-left.png", 13.0, 22.0],
@@ -871,20 +871,22 @@ var themedButtonValues = nil,
 
     // Global for reuse by CPSearchField
     themedRoundedTextFieldValues =
-    [
-        [@"bezel-color",    bezelColor,                         CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"bezel-color",    bezelFocusedColor,                  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
-        [@"font",           [CPFont systemFontOfSize:12.0]],
+        [
+            [@"bezel-color",    bezelColor,                         CPTextFieldStateRounded | CPThemeStateBezeled],
+            [@"bezel-color",    bezelFocusedColor,                  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
+            [@"font",           [CPFont systemFontOfSize:12.0]],
 
-        [@"content-inset",  CGInsetMake(9.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"bezel-inset",    CGInsetMake(4.0, 4.0, 4.0, 4.0),    CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
+            [@"content-inset",  CGInsetMake(8.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
+            [@"content-inset",  CGInsetMake(7.0, 14.0, 6.0, 14.0),  CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
 
-        [@"text-color",     placeholderColor,       CPTextFieldStateRounded | CPTextFieldStatePlaceholder],
+            [@"bezel-inset",    CGInsetMake(4.0, 4.0, 4.0, 4.0),    CPTextFieldStateRounded | CPThemeStateBezeled],
+            [@"bezel-inset",    CGInsetMake(0.0, 0.0, 0.0, 0.0),    CPTextFieldStateRounded | CPThemeStateBezeled | CPThemeStateEditing],
 
-        [@"min-size",       CGSizeMake(0.0, 30.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
-        [@"max-size",       CGSizeMake(-1.0, 30.0), CPTextFieldStateRounded | CPThemeStateBezeled]
-    ];
+            [@"text-color",     placeholderColor,       CPTextFieldStateRounded | CPTextFieldStatePlaceholder],
+
+            [@"min-size",       CGSizeMake(0.0, 30.0),  CPTextFieldStateRounded | CPThemeStateBezeled],
+            [@"max-size",       CGSizeMake(-1.0, 30.0), CPTextFieldStateRounded | CPThemeStateBezeled]
+        ];
 
     [self registerThemeValues:themedRoundedTextFieldValues forView:textfield];
 
@@ -900,24 +902,9 @@ var themedButtonValues = nil,
 
 + (CPSearchField)themedSearchField
 {
-    var searchField = [[CPSearchField alloc] initWithFrame:CGRectMake(0.0, 0.0, 150.0, 30.0)];
+    var searchField = [[CPSearchField alloc] initWithFrame:CGRectMake(0.0, 0.0, 60.0, 30.0)];
 
-    var cancelIcon = PatternImage(@"searchfield-cancel-icon.png", 14.0, 14.0),
-        cancelIconHighlighted = PatternImage(@"searchfield-cancel-icon-highlighted.png", 14.0, 14.0),
-        searchIcon = PatternImage(@"searchfield-search-icon.png", 13.0, 13.0),
-        disclosureIcon = PatternImage(@"searchfield-disclosure-icon.png", 18.0, 13.0);
-
-    var themeValues =
-    [
-        [@"cancel-icon",        cancelIcon],
-        [@"cancel-icon",        cancelIconHighlighted,  CPSearchFieldCancelHighlightedState],
-
-        [@"search-icon",        searchIcon],
-        [@"disclosure-icon",    disclosureIcon]
-    ];
-
-    [self registerThemeValues:themeValues forView:searchField inherit:themedRoundedTextFieldValues];
-
+    [self registerThemeValues:nil forView:searchField inherit:themedRoundedTextFieldValues];
     return searchField;
 }
 
@@ -1010,6 +997,7 @@ var themedButtonValues = nil,
 
     return button;
 }
+
 + (CPRadioButton)themedRadioButton
 {
     var button = [CPRadio radioWithTitle:@"Hello Friend!"],
@@ -1514,8 +1502,8 @@ var themedButtonValues = nil,
 
     var themedSplitViewValues =
         [
-            [@"divider-thickness", 10.0],
-            [@"pane-divider-thickness", 1.0],
+            [@"divider-thickness", 1.0],
+            [@"pane-divider-thickness", 10.0],
             [@"pane-divider-color", [CPColor colorWithRed:165.0 / 255.0 green:165.0 / 255.0 blue:165.0 / 255.0 alpha:1.0]]
         ];
 

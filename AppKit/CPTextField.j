@@ -1025,6 +1025,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         [self copy:sender];
         [self deleteBackward:sender];
     }
+    else
+        [CPTimer scheduledTimerWithTimeInterval:0.0 target:self selector:@selector(keyUp:) userInfo:nil repeats:NO];
 }
 
 - (void)paste:(id)sender
@@ -1046,6 +1048,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         [self setStringValue:newValue];
         [self setSelectedRange:CPMakeRange(selectedRange.location + pasteString.length, 0)];
     }
+    else
+        [CPTimer scheduledTimerWithTimeInterval:0.0 target:self selector:@selector(keyUp:) userInfo:nil repeats:NO];
 }
 
 - (CPRange)selectedRange
