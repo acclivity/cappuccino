@@ -132,7 +132,7 @@ CPColorPickerViewHeight = 370;
         [self setWorksWhenModal:YES];
         [self setBecomesKeyOnlyIfNeeded:YES];
 
-        [self setMinSize:CGSizeMake(219.0, 342.0)];
+        [self setMinSize:CGSizeMake(219.0, 363.0)];
         [self setMaxSize:CGSizeMake(323.0, 537.0)];
     }
 
@@ -376,6 +376,7 @@ CPColorPickerViewHeight = 370;
 
     [_opacitySlider setMinValue:0.0];
     [_opacitySlider setMaxValue:1.0];
+    [_opacitySlider setAutoresizingMask:CPViewWidthSizable];
 
     [_opacitySlider setTarget:self];
     [_opacitySlider setAction:@selector(setOpacity:)];
