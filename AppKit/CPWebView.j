@@ -123,6 +123,8 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
     CGSize              _scrollSize;
 
     int                 _loadHTMLStringTimer;
+
+    BOOL                _drawsBackground;
 }
 
 - (id)initWithFrame:(CPRect)frameRect frameName:(CPString)frameName groupName:(CPString)groupName
@@ -146,6 +148,10 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
         _contentIsAccessible    = YES;
         _isLoading              = NO;
 
+        _drawsBackground        = YES;
+
+        [self setBackgroundColor:[CPColor whiteColor]];
+
         [self _initDOMWithFrame:aFrame];
     }
 
@@ -164,7 +170,7 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
     _iframe.style.borderWidth = "0px";
     _iframe.frameBorder = "0";
 
-    [self setDrawsBackground:YES];
+    [self _applyBackgroundColor];
 
     _loadCallback = function()
     {
@@ -383,6 +389,7 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
     }
 
     parent.appendChild(_iframe);
+    [self _applyBackgroundColor];
 
     [self _resizeWebFrame];
 }
@@ -419,7 +426,6 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
     [self _startedLoading];
 
     _ignoreLoadStart = YES;
-    _ignoreLoadEnd = NO;
 
     _url = nil;
     _html = aString;
@@ -432,7 +438,6 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
     [self _startedLoading];
 
     _ignoreLoadStart = YES;
-    _ignoreLoadEnd = NO;
 
     _url = _mainFrameURL;
     _html = nil;
@@ -450,6 +455,8 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
         _contentIsAccessible = [cpurl _passesSameOriginPolicy];
         [self _updateEffectiveScrollMode];
 
+        _ignoreLoadEnd = NO;
+
         _iframe.src = _url;
     }
     else if (_html !== nil)
@@ -459,6 +466,8 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
 
         _contentIsAccessible = YES;
         [self _updateEffectiveScrollMode];
+
+        _ignoreLoadEnd = NO;
 
         if (_loadHTMLStringTimer !== nil)
         {
@@ -471,8 +480,11 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
         {
             var win = [self DOMWindow];
 
+            /*
+            If _html is the empty string, subtitute in an empty HTML structure. Just leaving the contents entirely empty prompts the browser to subtitute in a white page which would interfere with any custom background colours in use by this web view.
+            */
             if (win)
-                win.document.write(_html);
+                win.document.write(_html || "<html><body></body></html>");
 
             window.setTimeout(_loadCallback, 1);
         }, 0);
@@ -497,7 +509,7 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
     [self _attachScrollEventIfNecessary];
 
     [_contentSizeCheckTimer invalidate];
-    if (_effectiveScrollMode === CPWebViewScrollAppKit)
+    if (_effectiveScrollMode == CPWebViewScrollAppKit)
     {
         /*
         FIXME Need better method.
@@ -714,19 +726,44 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
 */
 - (BOOL)drawsBackground
 {
-    return _iframe.style.backgroundColor != "";
+    return _drawsBackground;
 }
 
 /*!
-    Sets whether the webview draws its own background.
+    Sets whether the webview draws its own background when the displayed contents do not.
+
+    If you are trying to create a transparent iframe:
+
+    A) call this method with NO
+    A) call setBackground:[CPColor transparent]
+    B) ensure the content does not draw a background, e.g. it has <body style="background-color: transparent;">
 
     @param BOOL - YES if the webview should draw its background, otherwise NO.
 */
-- (void)setDrawsBackground:(BOOL)drawsBackround
+- (void)setDrawsBackground:(BOOL)drawsBackground
 {
-    _iframe.style.backgroundColor = drawsBackround ? "white" : "";
+    if (drawsBackground == _drawsBackground)
+        return;
+    _drawsBackground = drawsBackground;
+
+    [self _applyBackgroundColor];
 }
 
+- (void)setBackgroundColor:(CPColor)aColor
+{
+    [super setBackgroundColor:aColor];
+    [self _applyBackgroundColor];
+}
+
+- (void)_applyBackgroundColor
+{
+    if (_iframe)
+    {
+        var bgColor = [self backgroundColor] || [CPColor whiteColor];
+        _iframe.allowtransparency = !_drawsBackground;
+        _iframe.style.backgroundColor = _drawsBackground ? [bgColor cssString] : "transparent";
+    }
+}
 
 // IBActions
 
@@ -943,7 +980,9 @@ CPWebViewAppKitScrollMaxPollCount                  = 3;
         [self _initDOMWithFrame:[self frame]];
 #endif
 
-        [self setBackgroundColor:[CPColor whiteColor]];
+        if (![self backgroundColor])
+            [self setBackgroundColor:[CPColor whiteColor]];
+
         [self _updateEffectiveScrollMode];
     }
 
