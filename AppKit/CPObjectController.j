@@ -393,6 +393,12 @@ var CPObjectControllerContentKey                        = @"CPObjectControllerCo
     [aCoder encodeBool:[self automaticallyPreparesContent] forKey:CPObjectControllerAutomaticallyPreparesContentKey];
 }
 
+- (void)awakeFromCib
+{
+    if (![self content] && [self automaticallyPreparesContent])
+        [self prepareContent];
+}
+
 @end
 
 @implementation _CPObservationProxy : CPObject
@@ -657,7 +663,7 @@ var CPObjectControllerContentKey                        = @"CPObjectControllerCo
 
 - (id)_controllerMarkerForValues:(CPArray)theValues
 {
- var count = [theValues count];
+    var count = [theValues count];
 
     if (!count)
         value = CPNoSelectionMarker;
@@ -678,6 +684,9 @@ var CPObjectControllerContentKey                        = @"CPObjectControllerCo
             }
         }
     }
+
+    if (value === nil || value.isa && [value isEqual:[CPNull null]])
+        value = CPNullMarker;
 
     return value;
 }

@@ -224,6 +224,12 @@ var CPBindingOperationAnd = 0,
     return aValue;
 }
 
+- (BOOL)continuouslyUpdatesValue
+{
+    var options = [_info objectForKey:CPOptionsKey];
+    return [[options objectForKey:CPContinuouslyUpdatesValueBindingOption] boolValue];
+}
+
 @end
 
 @implementation CPObject (KeyValueBindingCreation)
@@ -430,6 +436,7 @@ CPOptionsKey            = @"CPOptionsKey";
 CPMultipleValuesMarker  = @"CPMultipleValuesMarker";
 CPNoSelectionMarker     = @"CPNoSelectionMarker";
 CPNotApplicableMarker   = @"CPNotApplicableMarker";
+CPNullMarker            = @"CPNullMarker";
 
 // Binding name constants
 CPAlignmentBinding      = @"alignment";
@@ -470,5 +477,5 @@ CPValueTransformerBindingOption                     = @"CPValueTransformer";
 
 CPIsControllerMarker = function(/*id*/anObject)
 {
-    return anObject === CPMultipleValuesMarker || anObject === CPNoSelectionMarker || anObject === CPNotApplicableMarker;
+    return anObject === CPMultipleValuesMarker || anObject === CPNoSelectionMarker || anObject === CPNotApplicableMarker || anObject === CPNullMarker;
 }

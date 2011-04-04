@@ -807,6 +807,16 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     [[CPNotificationCenter defaultCenter] postNotification:note];
 }
 
+- (void)textDidChange:(CPNotification)note
+{
+    if ([note object] !== self)
+        return;
+
+    [self _continuouslyReverseSetBinding];
+
+    [super textDidChange:note];
+}
+
 - (void)sendAction:(SEL)anAction to:(id)anObject
 {
     [self _reverseSetBinding];
@@ -1429,6 +1439,10 @@ var CPTextFieldIsEditableKey            = "CPTextFieldIsEditableKey",
                                 reason:@"can't transform non applicable key on: "+_source+" value: "+newValue];
 
                 newValue = [options objectForKey:CPNotApplicablePlaceholderBindingOption] || @"Not Applicable";
+                break;
+
+            case CPNullMarker:
+                newValue = [options objectForKey:CPNullPlaceholderBindingOption] || @"";
                 break;
         }
 

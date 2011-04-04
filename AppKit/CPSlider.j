@@ -382,6 +382,11 @@ CPCircularSlider    = 1;
     [self setNeedsDisplay:YES];
 }
 
+- (BOOL)isContinuous
+{
+    return (_sendActionOn & CPLeftMouseDraggedMask) !== 0;
+}
+
 /*!
     @ignore
     should we have _continuous?
@@ -424,8 +429,6 @@ var CPSliderMinValueKey             = "CPSliderMinValueKey",
     if (self)
     {
         _altIncrementValue = [aCoder decodeDoubleForKey:CPSliderAltIncrValueKey];
-
-        [self setContinuous:YES];
 
         [self _recalculateIsVertical];
 
