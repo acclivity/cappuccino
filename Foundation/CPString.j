@@ -28,6 +28,8 @@
 @import "CPURL.j"
 @import "CPValue.j"
 
+#define _CPMaxRange(aRange) ((aRange).location + (aRange).length)
+
 /*!
     A case insensitive search
     @global
@@ -297,6 +299,9 @@ var CPStringRegexSpecialCharacters = [
 */
 - (CPString)substringWithRange:(CPRange)aRange
 {
+    if (aRange.location < 0 || _CPMaxRange(aRange) > length)
+        [CPException raise:CPRangeException reason:"aRange out of bounds"];
+
     return substr(aRange.location, aRange.length);
 }
 
@@ -346,10 +351,9 @@ var CPStringRegexSpecialCharacters = [
 }
 
 /*!
-    Finds the range of characters in the receiver
-    where the specified string exists in the given range
-    of the receiver.The search is subject to the options specified in the
-    specified mask which can be a combination of:
+    Finds the range of characters in the receiver where the specified string
+    exists in the given range of the receiver.The search is subject to the
+    options specified in the specified mask which can be a combination of:
     <pre>
     CPCaseInsensitiveSearch
     CPLiteralSearch
@@ -360,11 +364,17 @@ var CPStringRegexSpecialCharacters = [
     @param aString the string to search for
     @param aMask the options to use in the search
     @param aRange the range of the receiver in which to search for
-    @return the range of characters in the receiver. If the string was not found,
-    the \c length of the range will be 0.
+    @return the range of characters in the receiver. The range is relative to
+        the start of the full string and not the passed-in range. If the
+        string was not found, or if it was @"", the range will be
+        {CPNotFound, 0}.
 */
 - (CPRange)rangeOfString:(CPString)aString options:(int)aMask range:(CPrange)aRange
 {
+    // Searching for @"" always returns CPNotFound.
+    if (!aString)
+        return CPMakeRange(CPNotFound, 0);
+
     var string = (aRange == nil) ? self : [self substringWithRange:aRange],
         location = CPNotFound;
 
@@ -375,13 +385,20 @@ var CPStringRegexSpecialCharacters = [
     }
 
     if (aMask & CPBackwardsSearch)
-        location = string.lastIndexOf(aString, aMask & CPAnchoredSearch ? length - aString.length : 0);
+    {
+        location = string.lastIndexOf(aString);
+        if (aMask & CPAnchoredSearch && location + aString.length != string.length)
+            location = CPNotFound;
+    }
     else if (aMask & CPAnchoredSearch)
         location = string.substr(0, aString.length).indexOf(aString) != CPNotFound ? 0 : CPNotFound;
     else
         location = string.indexOf(aString);
 
-    return CPMakeRange(location, location == CPNotFound ? 0 : aString.length);
+    if (location == CPNotFound)
+        return CPMakeRange(CPNotFound, 0);
+
+    return CPMakeRange(location + (aRange ? aRange.location : 0), aString.length);
 }
 
 //Replacing Substrings
