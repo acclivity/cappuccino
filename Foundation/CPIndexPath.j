@@ -152,7 +152,7 @@ var CPIndexPathIndexesKey = @"CPIndexPathIndexes";
 
 - (id)initWithCoder:(CPCoder)theCoder
 {
-    if (self = [super initWithCoder:theCoder])
+    if (self = [self init])
     {
         _indexes = [theCoder decodeObjectForKey:CPIndexPathIndexesKey];
     }
