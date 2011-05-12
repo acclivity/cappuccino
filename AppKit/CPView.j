@@ -186,6 +186,8 @@ var CPViewFlags                     = { },
     CPView              _previousKeyView;
 
     unsigned            _viewClassFlags;
+
+    CPString            _toolTip @accessors(property=toolTip);
 }
 
 /*
@@ -1285,6 +1287,14 @@ var CPViewFlags                     = { },
 }
 
 /*!
+    Returns YES if the view is not hidden, has no hidden ancestor and doesn't belong to a hidden window.
+*/
+- (BOOL)_isVisible
+{
+    return ![self isHiddenOrHasHiddenAncestor] && [[self window] isVisible];
+}
+
+/*!
     Called when the return value of isHiddenOrHasHiddenAncestor becomes YES,
     e.g. when this view becomes hidden due to a setHidden:YES message to
     itself or to one of its superviews.
@@ -2121,6 +2131,20 @@ setBoundsOrigin:
 
 @implementation CPView (KeyView)
 
+/*!
+    Overridden by subclasses to handle a key equivalent.
+
+    If the receiver’s key equivalent is the same as the characters of the key-down event theEvent,
+    as returned by \ref CPEvent::charactersIgnoringModifiers "[anEvent charactersIgnoringModifiers]",
+    the receiver should take the appropriate action and return \c YES. Otherwise, it should return
+    the result of invoking super’s implementation. The default implementation of this method simply
+    passes the message down the view hierarchy (from superviews to subviews)
+    and returns \c NO if none of the receiver’s subviews responds \c YES.
+
+    @param anEvent An event object that represents the key equivalent pressed
+    @return \c YES if theEvent is a key equivalent that the receiver handled,
+            \c NO if it is not a key equivalent that it should handle.
+*/
 - (BOOL)performKeyEquivalent:(CPEvent)anEvent
 {
     var count = [_subviews count];
