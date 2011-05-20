@@ -3,7 +3,7 @@
  * AppKit
  *
  * Created by Antoine Mercadal
- * Copyright 2009, Antoine Mercadal
+ * Copyright 2011 <primalmotion@archipelproject.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,74 +22,101 @@
 
 @import "CPTextField.j"
 @import "CPView.j"
+@import "CPWindow.j"
 
-@import "_CPAttachedWindow.j"
+_CPToolTipWindowMask = 1 << 27;
 
-var CPCurrentToolTip,
-    CPCurrentToolTipTimer;
-
-CPToolTipDefaultColorMask = CPAttachedBlackWindowMask;
+var _CPToolTipHeight = 24.0,
+    _CPToolTipFontSize = 11.0,
+    _CPCurrentToolTip,
+    _CPCurrentToolTipTimer,
+    _CPToolTipDelay = 1.0;
 
 /*! @ingroup appkit
-    subclass of CPAttachedWindow in order to build quick tooltip
+    This is a basic tooltip that behaves mostly like Cocoa ones.
 */
-@implementation _CPToolTip : _CPAttachedWindow
+@implementation _CPToolTip : CPWindow
 {
     CPTextField _content;
 }
 
+
 #pragma mark -
 #pragma mark Class Methods
 
-/*! returns an initialized CPToolTip with string and attach it to given view
+/*! Returns an initialized _CPToolTip with the given text and attach it to given view.
     @param aString the content of the tooltip
-    @param aView the view where the tooltip will be attached
 */
-+ (_CPToolTip)toolTipWithString:(CPString)aString forView:(CPView)aView
++ (_CPToolTip)toolTipWithString:(CPString)aString
 {
-    var tooltip = [[_CPToolTip alloc] initWithString:aString styleMask:CPToolTipDefaultColorMask];
+    var tooltip = [[_CPToolTip alloc] initWithString:aString styleMask:_CPToolTipWindowMask];
 
-    [tooltip setAlphaValue:0.9];
-    [tooltip attachToView:aView];
-    [tooltip resignMainWindow];
+    [tooltip showToolTip];
 
     return tooltip;
 }
 
-/*! compute a cool size for the given string
-    @param aToolTipSize the original wanted tool tip size
+/*!
+    Compute a cool size for the given string.
+
+    @param aToolTipSize a frame with the maximum width desired for the tooltip
     @param aText the wanted text
     @return CPArray containing the computer toolTipSize and textFrameSize
 */
 + (CPSize)computeCorrectSize:(CPSize)aToolTipSize text:(CPString)aText
 {
-    var font = [CPFont systemFontOfSize:12.0],
-        textFrameSize = [aText sizeWithFont:font inWidth:(aToolTipSize.width - 10)];
+    var font = [CPFont systemFontOfSize:_CPToolTipFontSize],
+        textFrameSizeSingleLine = [aText sizeWithFont:font],
+        textFrameSize = [aText sizeWithFont:font inWidth:(aToolTipSize.width)];
+
+    // If the text fully fits within the maximum width, shrink to fit.
+    if (textFrameSizeSingleLine.width < aToolTipSize.width)
+    {
+        var textField = [[CPTextField alloc] initWithFrame:CGRectMakeZero()],
+            inset = [textField currentValueForThemeAttribute:@"content-inset"] || CGInsetMakeZero();
+        textFrameSize = textFrameSizeSingleLine;
+        textFrameSize.width += inset.left + inset.right;
+        aToolTipSize.width = textFrameSize.width;
+    }
 
     if (textFrameSize.height < 100)
     {
-        aToolTipSize.height = textFrameSize.height + 10;
+        aToolTipSize.height = textFrameSize.height + 4;
         return [aToolTipSize, textFrameSize];
     }
 
-    var newWidth        = aToolTipSize.width + ((parseInt(textFrameSize.height - 100) / 30) * 30);
-    textFrameSize       = [aText sizeWithFont:font inWidth:newWidth - 10];
-    aToolTipSize.width  = newWidth + 5;
-    aToolTipSize.height = textFrameSize.height + 10;
+    var newWidth        = aToolTipSize.width + ((parseInt(textFrameSize.height - 100) / _CPToolTipHeight) * _CPToolTipHeight);
+    textFrameSize       = [aText sizeWithFont:font inWidth:newWidth - 4];
+    aToolTipSize.width  = newWidth + 2;
+    aToolTipSize.height = textFrameSize.height + 4;
 
     return [aToolTipSize, textFrameSize];
+}
+
+/*!
+    Override default windowView class loader.
+
+    @param aStyleMask the window mask
+    @return the windowView class
+*/
++ (Class)_windowViewClassForStyleMask:(unsigned)aStyleMask
+{
+    return _CPToolTipWindowView;
 }
 
 
 #pragma mark -
 #pragma mark Initialization
 
-/*! returns an initialized CPToolTip with string
+/*!
+    Returns an initialized _CPToolTip with string.
+
     @param aString the content of the tooltip
+    @param aStyleMask the tooltip's style mask
 */
 - (id)initWithString:(CPString)aString styleMask:(unsigned)aStyleMask
 {
-    var toolTipFrame = CPRectMake(0.0, 0.0, 250.0, 30.0),
+    var toolTipFrame = CPRectMake(0.0, 0.0, 250.0, _CPToolTipHeight),
         layout = [_CPToolTip computeCorrectSize:toolTipFrame.size text:aString],
         textFrameSize = layout[1];
 
@@ -100,25 +127,61 @@ CPToolTipDefaultColorMask = CPAttachedBlackWindowMask;
         textFrameSize.height += 4;
 
         _content = [CPTextField labelWithTitle:aString];
+        [_content setFont:[CPFont systemFontOfSize:_CPToolTipFontSize]]
         [_content setLineBreakMode:CPLineBreakByCharWrapping];
         [_content setAlignment:CPJustifiedTextAlignment];
         [_content setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
-        [_content setFrameOrigin:CPPointMake(5.0, 5.0)];
+        [_content setFrameOrigin:CPPointMake(0.0, 0.0)];
         [_content setFrameSize:textFrameSize];
         [_content setTextShadowOffset:CGSizeMake(0.0, 1.0)];
-        [_content setTextColor:(aStyleMask & CPAttachedWhiteWindowMask) ? [CPColor blackColor] : [CPColor whiteColor]];
-        [_content setValue:((aStyleMask & CPAttachedWhiteWindowMask) ? [CPColor whiteColor] : [CPColor blackColor]) forThemeAttribute:@"text-shadow-color"];
+        [_content setTextColor:[CPColor blackColor]];
 
         [[self contentView] addSubview:_content];
-        [self setMovableByWindowBackground:NO];
+
+        [self setLevel:CPStatusWindowLevel];
+        [self setAlphaValue:0.9];
+
+        [_windowView setNeedsDisplay:YES];
     }
 
     return self;
 }
 
+
+#pragma mark -
+#pragma mark Controls
+
+/*!
+    Show the tooltip after computing the position.
+*/
+- (void)showToolTip
+{
+    var mousePosition = [[CPApp currentEvent] globalLocation],
+        nativeRect = [[[CPApp mainWindow] platformWindow] nativeContentRect];
+
+    mousePosition.y += 20;
+
+    if (mousePosition.x < 0)
+        mousePosition.x = 5;
+    if (mousePosition.x + CPRectGetWidth([self frame]) > nativeRect.size.width)
+        mousePosition.x = nativeRect.size.width - CPRectGetWidth([self frame]) - 5;
+    if (mousePosition.y < 0)
+        mousePosition.y = 5;
+    if (mousePosition.y + CPRectGetHeight([self frame]) > nativeRect.size.height)
+        mousePosition.y = mousePosition.y - CPRectGetHeight([self frame]) - 40;
+
+    [self setFrameOrigin:mousePosition];
+    [self orderFront:nil];
+}
+
 @end
 
-@implementation CPView (Tooltips)
+
+
+/*! @ingroup appkit
+    Add tooltip support to CPView.
+*/
+@implementation CPView (toolTips)
 
 /*!
     Sets the tooltip for the receiver.
@@ -136,13 +199,13 @@ CPToolTipDefaultColorMask = CPAttachedBlackWindowMask;
         return;
 
     var fIn = function(e)
-            {
-                [self _fireToolTip];
-            },
+        {
+            [self _fireToolTip];
+        },
         fOut = function(e)
-            {
-                 [self _invalidateToolTip];
-            };
+        {
+            [self _invalidateToolTip];
+        };
 
     if (_toolTip)
     {
@@ -176,21 +239,29 @@ CPToolTipDefaultColorMask = CPAttachedBlackWindowMask;
     }
 }
 
+/*!
+    Returns the receiver's tooltip.
+*/
+- (CPString)toolTip
+{
+    return _toolTip;
+}
+
 /*! @ignore
-    starts the tooltip timer
+    Starts the tooltip timer.
 */
 - (void)_fireToolTip
 {
-    if (CPCurrentToolTipTimer)
+    if (_CPCurrentToolTipTimer)
     {
-        [CPCurrentToolTipTimer invalidate];
-        if (CPCurrentToolTip)
-            [CPCurrentToolTip close:nil];
-        CPCurrentToolTip = nil;
+        [_CPCurrentToolTipTimer invalidate];
+        if (_CPCurrentToolTip)
+            [_CPCurrentToolTip close];
+        _CPCurrentToolTip = nil;
     }
 
     if (_toolTip)
-        CPCurrentToolTipTimer = [CPTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(_showToolTip:) userInfo:nil repeats:NO];
+        _CPCurrentToolTipTimer = [CPTimer scheduledTimerWithTimeInterval:_CPToolTipDelay target:self selector:@selector(_showToolTip:) userInfo:nil repeats:NO];
 }
 
 /*! @ignore
@@ -198,16 +269,16 @@ CPToolTipDefaultColorMask = CPAttachedBlackWindowMask;
 */
 - (void)_invalidateToolTip
 {
-    if (CPCurrentToolTipTimer)
+    if (_CPCurrentToolTipTimer)
     {
-        [CPCurrentToolTipTimer invalidate];
-        CPCurrentToolTipTimer = nil;
+        [_CPCurrentToolTipTimer invalidate];
+        _CPCurrentToolTipTimer = nil;
     }
 
-    if (CPCurrentToolTip)
+    if (_CPCurrentToolTip)
     {
-        [CPCurrentToolTip close:nil];
-        CPCurrentToolTip = nil;
+        [_CPCurrentToolTip close];
+        _CPCurrentToolTip = nil;
     }
 }
 
@@ -216,9 +287,9 @@ CPToolTipDefaultColorMask = CPAttachedBlackWindowMask;
 */
 - (void)_showToolTip:(CPTimer)aTimer
 {
-    if (CPCurrentToolTip)
-        [CPCurrentToolTip close:nil];
-    CPCurrentToolTip = [_CPToolTip toolTipWithString:_toolTip forView:self];
+    if (_CPCurrentToolTip)
+        [_CPCurrentToolTip close];
+    _CPCurrentToolTip = [_CPToolTip toolTipWithString:_toolTip];
 }
 
 @end
