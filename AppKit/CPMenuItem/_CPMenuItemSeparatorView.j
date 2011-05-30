@@ -28,10 +28,10 @@
 
     CGContextBeginPath(context);
 
-    CGContextMoveToPoint(context, CGRectGetMinX(bounds), FLOOR(CGRectGetMidY(bounds)) - 0.5);
-    CGContextAddLineToPoint(context, CGRectGetMaxX(bounds), FLOOR(CGRectGetMidY(bounds)) - 0.5);
+    CGContextMoveToPoint(context, CGRectGetMinX(bounds) + 2.0, FLOOR(CGRectGetMidY(bounds)) - 0.5);
+    CGContextAddLineToPoint(context, CGRectGetMaxX(bounds) - 2.0, FLOOR(CGRectGetMidY(bounds)) - 0.5);
 
-    CGContextSetStrokeColor(context, [CPColor lightGrayColor]);
+    CGContextSetStrokeColor(context, [CPColor colorWithRed:199.0 / 255.0 green:199.0 / 255.0 blue:199.0 / 255.0 alpha:1.0]);
     CGContextStrokePath(context);
 }
 

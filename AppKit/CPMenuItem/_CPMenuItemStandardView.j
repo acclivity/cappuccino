@@ -1,8 +1,8 @@
 @import "CPControl.j"
 
 
-var LEFT_MARGIN                 = 3.0,
-    RIGHT_MARGIN                = 14.0 + 3.0,
+var LEFT_MARGIN                 = 5.0,
+    RIGHT_MARGIN                = 10.0,
     STATE_COLUMN_WIDTH          = 14.0,
     INDENTATION_WIDTH           = 17.0,
     VERTICAL_MARGIN             = 4.0,
@@ -202,7 +202,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
         var submenuViewFrame = [_submenuIndicatorView frame];
 
-        submenuViewFrame.origin.x = CGRectGetWidth([_contentView bounds]) - CGRectGetWidth(submenuViewFrame) - 3.0;
+        submenuViewFrame.origin.x = CGRectGetWidth([_contentView bounds]) - CGRectGetWidth(submenuViewFrame) - 7.0;
 
         x += CGRectGetWidth(submenuViewFrame);
         height = MAX(height, CGRectGetHeight(submenuViewFrame));
