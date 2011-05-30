@@ -122,6 +122,11 @@ var STICKY_TIME_INTERVAL        = 500,
     return LEFT_MARGIN;
 }
 
+- (void)_updateShadow
+{
+    // Overriden to disable the default window shadow and returning NO from hasShadow does nothing.
+}
+
 - (void)setFont:(CPFont)aFont
 {
     [_menuView setFont:aFont];
@@ -470,7 +475,7 @@ var STICKY_TIME_INTERVAL        = 500,
     if (x < CGRectGetMinX(bounds) || x > CGRectGetMaxX(bounds))
         return CPNotFound;
 
-    var y = aPoint.y + 5.0,
+    var y = aPoint.y,
         low = 0,
         high = _visibleMenuItemInfos.length - 1;
 
@@ -528,7 +533,7 @@ var STICKY_TIME_INTERVAL        = 500,
         [view setShowsStateColumn:showsStateColumn];
         [view synchronizeWithMenuItem];
 
-        [view setFrameOrigin:CGPointMake(0.0, y + 5.0)];
+        [view setFrameOrigin:CGPointMake(0.0, y)];
 
         [self addSubview:view];
 
@@ -549,7 +554,7 @@ var STICKY_TIME_INTERVAL        = 500,
     }
 
     [self setAutoresizesSubviews:NO];
-    [self setFrameSize:CGSizeMake(maxWidth, y + 10.0)];
+    [self setFrameSize:CGSizeMake(maxWidth, y + 2.0)];
     [self setAutoresizesSubviews:YES];
 }
 

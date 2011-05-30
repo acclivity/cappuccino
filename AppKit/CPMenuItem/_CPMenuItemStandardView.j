@@ -41,7 +41,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     if (self !== [_CPMenuItemStandardView class])
         return;
 
-    SUBMENU_INDICATOR_COLOR = [CPColor grayColor];
+    SUBMENU_INDICATOR_COLOR = [CPColor colorWithRed:162.0 / 255.0 green:162.0 / 255.0 blue:162.0 / 255.0 alpha:1.0];
 
     _CPMenuItemSelectionColor =  [CPColor colorWithCalibratedRed:87.0 / 255.0 green:127.0 / 255.0 blue:215.0 / 255.0 alpha:1.0];
     _CPMenuItemTextShadowColor = [CPColor colorWithWhite:0.0 alpha:0.15];
@@ -99,7 +99,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
         [_contentView addSubview:_keyEquivalentView];
 
-        _submenuIndicatorView = [[_CPMenuItemSubmenuIndicatorView alloc] initWithFrame:CGRectMake(0.0, 0.0, 8.0, 10.0)];
+        _submenuIndicatorView = [[_CPMenuItemSubmenuIndicatorView alloc] initWithFrame:CGRectMake(0.0, 0.0, 5.0, 8.0)];
 
         [_submenuIndicatorView setColor:SUBMENU_INDICATOR_COLOR];
         [_submenuIndicatorView setAutoresizingMask:CPViewMinXMargin];
@@ -237,7 +237,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     [self setAutoresizesSubviews:YES];
 
     [self setAutoresizesSubviews:NO];
-    [_contentView setFrame:CGRectInset([self bounds], 7.0, 0.0)];
+    [_contentView setFrame:CGRectInset([self bounds], 2.0, 0.0)];
     [self setAutoresizesSubviews:YES];
 }
 
@@ -302,6 +302,8 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 {
     var context = [[CPGraphicsContext currentContext] graphicsPort],
         bounds = [self bounds];
+    
+    bounds.size.height -= 1.0;
     
     CGContextBeginPath(context);
     
