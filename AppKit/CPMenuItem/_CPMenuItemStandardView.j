@@ -186,7 +186,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
         
         var keyEquivalentViewFrame = [_keyEquivalentView frame];
 
-        keyEquivalentViewFrame.origin.x = x;
+        keyEquivalentViewFrame.origin.x = CGRectGetWidth([_contentView bounds]) - CGRectGetWidth(keyEquivalentViewFrame) - 7.0;
         x += CGRectGetWidth(keyEquivalentViewFrame);
         height = MAX(height, CGRectGetHeight(keyEquivalentViewFrame));
 
