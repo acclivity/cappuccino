@@ -242,7 +242,7 @@ var STICKY_TIME_INTERVAL            = 500,
         if ([activeMenuContainer isMenuBar])
             newMenuOrigin = CGPointMake(CGRectGetMinX(activeItemRect), CGRectGetMaxY(activeItemRect));
         else
-            var newMenuOrigin = CGPointMake(CGRectGetMaxX(activeItemRect) - 8.0, CGRectGetMinY(activeItemRect) - 10.0);
+            var newMenuOrigin = CGPointMake(CGRectGetMaxX(activeItemRect) - 5.0, CGRectGetMinY(activeItemRect));
 
         newMenuOrigin = [activeMenuContainer convertBaseToGlobal:newMenuOrigin];
 
