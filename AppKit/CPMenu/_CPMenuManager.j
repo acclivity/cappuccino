@@ -306,11 +306,7 @@ var STICKY_TIME_INTERVAL            = 500,
 
     // Hide all submenus.
     [self showMenu:nil fromMenu:trackingMenu atPoint:nil];
-
-    var delegate = [trackingMenu delegate];
-
-    if ([delegate respondsToSelector:@selector(menuDidClose:)])
-        [delegate menuDidClose:trackingMenu];
+    [trackingMenu _menuDidClose];
 
     if (_trackingCallback)
         _trackingCallback([self trackingMenuContainer], trackingMenu);
@@ -379,6 +375,8 @@ var STICKY_TIME_INTERVAL            = 500,
     var count = _menuContainerStack.length,
         index = count;
 
+    [newMenu _menuWillOpen];
+
     // Hide all menus up to the base menu...
     while (index--)
     {
@@ -398,6 +396,8 @@ var STICKY_TIME_INTERVAL            = 500,
 
         [_CPMenuWindow poolMenuWindow:menuContainer];
         [_menuContainerStack removeObjectAtIndex:index];
+
+        [menu _menuDidClose];
     }
 
     if (!newMenu)
