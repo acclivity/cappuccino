@@ -65,7 +65,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
 + (float)_standardLeftMargin
 {
-    return LEFT_MARGIN + STATE_COLUMN_WIDTH;
+    return LEFT_MARGIN + STATE_COLUMN_WIDTH + (VERTICAL_MARGIN / 2.0);
 }
 
 - (id)initWithFrame:(CGRect)aFrame

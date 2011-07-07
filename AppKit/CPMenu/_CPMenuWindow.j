@@ -13,8 +13,8 @@ _CPMenuWindowAttachedMenuBackgroundStyle    = 2;
 var STICKY_TIME_INTERVAL        = 500,
 
     TOP_MARGIN                  = 5.0,
-    LEFT_MARGIN                 = 1.0,
-    RIGHT_MARGIN                = 1.0,
+    LEFT_MARGIN                 = 0.0,
+    RIGHT_MARGIN                = 0.0,
     BOTTOM_MARGIN               = 5.0,
 
     SCROLL_INDICATOR_HEIGHT     = 16.0;
