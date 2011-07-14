@@ -21,8 +21,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#import "../Foundation/Ref.h"
-
 @import "CPControl.j"
 @import "CPStringDrawing.j"
 @import "CPCompatibility.j"
@@ -85,10 +83,11 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
     CPColor                 _textFieldBackgroundColor;
 
-    CPString                _placeholderString;
-    CPString                _stringValue;
+    id                      _placeholderString;
 
     id                      _delegate;
+
+    CPString                _textDidChangeValue;
 
     // NS-style Display Properties
     CPTextFieldBezelStyle   _bezelStyle;
@@ -484,17 +483,17 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     [self setNeedsLayout];
 
     _isEditing = NO;
-    _stringValue = [self stringValue];
 
 #if PLATFORM(DOM)
 
-    var element = [self _inputElement],
+    var string = [self stringValue],
+        element = [self _inputElement],
         font = [self currentValueForThemeAttribute:@"font"];
 
     // generate the font metric
     [font _getMetrics];
 
-    element.value = _stringValue;
+    element.value = string;
     element.style.color = [[self currentValueForThemeAttribute:@"text-color"] cssString];
     element.style.font = [font cssString];
     element.style.zIndex = 1000;
@@ -551,6 +550,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         CPTextFieldInputOwner = self;
     }, 0.0);
 
+    element.value = [self stringValue];
+
     [[[self window] platformWindow] _propagateCurrentDOMEvent:YES];
 
     CPTextFieldInputIsActive = YES;
@@ -573,32 +574,16 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 {
     [self unsetThemeState:CPThemeStateEditing];
 
-#if PLATFORM(DOM)
-
-    var element = [self _inputElement],
-        error = @"";
-
-    // If there is a formatter, always give it a chance to reject the resignation,
-    // even if the value has not changed.
-    if ([self _valueIsValid:element.value] === NO)
-    {
-        [self setThemeState:CPThemeStateEditing];
-        element.focus();
-        return NO;
-    }
-
-#endif
-
-    // Cache the formatted string
-    _stringValue = [self stringValue];
-
-    _willBecomeFirstResponderByClick = NO;
-
     [self _updatePlaceholderState];
 
     [self setNeedsLayout];
 
 #if PLATFORM(DOM)
+
+    var element = [self _inputElement];
+
+    if ([self stringValue] !== element.value)
+        [self _setStringValue:element.value];
 
     CPTextFieldInputResigning = YES;
 
@@ -627,7 +612,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 #endif
 
-    // post CPControlTextDidEndEditingNotification
+    //post CPControlTextDidEndEditingNotification
     if (_isEditing)
     {
         _isEditing = NO;
@@ -638,28 +623,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     }
 
     [self textDidBlur:[CPNotification notificationWithName:CPTextFieldDidBlurNotification object:self userInfo:nil]];
-
-    return YES;
-}
-
-- (BOOL)_valueIsValid:(CPString)aValue
-{
-#if PLATFORM(DOM)
-
-    var error = @"";
-
-    if ([self _setStringValue:aValue isNewValue:NO errorDescription:AT_REF(error)] === NO)
-    {
-        var acceptInvalidValue = NO;
-
-        if ([_delegate respondsToSelector:@selector(control:didFailToFormatString:errorDescription:)])
-            acceptInvalidValue = [_delegate control:self didFailToFormatString:[self _inputElement] errorDescription:error];
-
-        if (acceptInvalidValue === NO)
-            return NO;
-    }
-
-#endif
 
     return YES;
 }
@@ -724,14 +687,11 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)keyUp:(CPEvent)anEvent
 {
-#if PLATFORM(DOM)
+    var oldValue = [self stringValue];
+    [self _setStringValue:[self _inputElement].value];
 
-    var newValue = [self _inputElement].value;
-
-    if (newValue !== _stringValue)
+    if (oldValue !== [self stringValue])
     {
-        [self _setStringValue:newValue];
-
         if (!_isEditing)
         {
             _isEditing = YES;
@@ -740,8 +700,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
         [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self userInfo:nil]];
     }
-
-#endif
 
     [[[self window] platformWindow] _propagateCurrentDOMEvent:YES];
 }
@@ -779,15 +737,11 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)insertNewline:(id)sender
 {
-    if ([self _valueIsValid:_stringValue])
+    if (_isEditing)
     {
-        if (![self action] || [self sendAction:[self action] to:[self target]])
-        {
-            if (_isEditing)
-            {
-                _isEditing = NO;
-                [self textDidEndEditing:[CPNotification notificationWithName:CPControlTextDidEndEditingNotification object:self userInfo:nil]];
-            }
+        _isEditing = NO;
+        [self textDidEndEditing:[CPNotification notificationWithName:CPControlTextDidEndEditingNotification object:self userInfo:nil]];
+    }
 
     // Call set string value to make sure the object value is updated and formatted
     [self setStringValue:[self _inputElement].value];
@@ -799,27 +753,12 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)insertNewlineIgnoringFieldEditor:(id)sender
 {
-    [self _insertCharacterIgnoringFieldEditor:CPNewlineCharacter];
-}
+    var oldValue = [self stringValue];
 
-- (void)insertTabIgnoringFieldEditor:(id)sender
-{
-    [self _insertCharacterIgnoringFieldEditor:CPTabCharacter];
-}
+    [self _inputElement].value += CPNewlineCharacter;
+    [self _setStringValue:[self _inputElement].value];
 
-- (void)_insertCharacterIgnoringFieldEditor:(CPString)aCharacter
-{
-#if PLATFORM(DOM)
-
-    var oldValue = _stringValue,
-        range = [self selectedRange],
-        element = [self _inputElement];
-
-    element.value = [element.value stringByReplacingCharactersInRange:[self selectedRange] withString:aCharacter];
-    [self _setStringValue:element.value];
-
-    // NOTE: _stringValue is now the current input element value
-    if (oldValue !== _stringValue)
+    if (oldValue !== [self stringValue])
     {
         if (!_isEditing)
         {
@@ -829,8 +768,25 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
         [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self userInfo:nil]];
     }
+}
 
-#endif
+- (void)insertTabIgnoringFieldEditor:(id)sender
+{
+    var oldValue = [self stringValue];
+
+    [self _inputElement].value += CPTabCharacter;
+    [self _setStringValue:[self _inputElement].value];
+
+    if (oldValue !== [self stringValue])
+    {
+        if (!_isEditing)
+        {
+            _isEditing = YES;
+            [self textDidBeginEditing:[CPNotification notificationWithName:CPControlTextDidBeginEditingNotification object:self userInfo:nil]];
+        }
+
+        [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self userInfo:nil]];
+    }
 }
 
 - (void)textDidBlur:(CPNotification)note
@@ -861,8 +817,15 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     [super textDidChange:note];
 }
 
+- (void)sendAction:(SEL)anAction to:(id)anObject
+{
+    [self _reverseSetBinding];
+
+    [CPApp sendAction:anAction to:anObject from:self];
+}
+
 /*!
-    Returns the string in the text field.
+    Returns the string the text field.
 */
 - (id)objectValue
 {
@@ -884,10 +847,9 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 /*
     @ignore
-    Sets the internal string value without updating the value in the input element.
-    This should only be invoked when the underlying text element's value has changed.
+    Sets the internal string value without updating the value in the input element
 */
-- (BOOL)_setStringValue:(CPString)aValue
+- (void)_setStringValue:(id)aValue
 {
     [self willChangeValueForKey:@"stringValue"];
 
@@ -902,28 +864,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 - (void)setObjectValue:(id)aValue
 {
     [super setObjectValue:aValue];
-
-    var formatter = [self formatter];
-
-    if (formatter)
-    {
-        // If there is a formatter, make sure the object value can be formatted successfully
-        var formattedString = [self hasThemeState:CPThemeStateEditing] ? [formatter editingStringForObjectValue:aValue] : [formatter stringForObjectValue:aValue];
-
-        if (formattedString === nil)
-        {
-            var value = nil;
-
-            // Formatting failed, get an "empty" object by formatting an empty string.
-            // If that fails, the value is undefined.
-            if ([formatter getObjectValue:AT_REF(value) forString:@"" errorDescription:nil] === NO)
-                value = undefined;
-
-            [super setObjectValue:value];
-        }
-    }
-
-    _stringValue = [self stringValue];
 
 #if PLATFORM(DOM)
 
@@ -941,7 +881,9 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 
 - (void)_updatePlaceholderState
 {
-    if ((!_stringValue || _stringValue.length === 0) && ![self hasThemeState:CPThemeStateEditing])
+    var string = [self stringValue];
+
+    if ((!string || string.length === 0) && ![self hasThemeState:CPThemeStateEditing])
         [self setThemeState:CPTextFieldStatePlaceholder];
     else
         [self unsetThemeState:CPTextFieldStatePlaceholder];
@@ -1007,7 +949,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         minSize = [self currentValueForThemeAttribute:@"min-size"],
         maxSize = [self currentValueForThemeAttribute:@"max-size"],
         lineBreakMode = [self lineBreakMode],
-        text = (_stringValue || @" "),
+        text = ([self stringValue] || @" "),
         textSize = _CGSizeMakeCopy(frameSize),
         font = [self currentValueForThemeAttribute:@"font"];
 
@@ -1078,7 +1020,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
             return;
 
         var pasteboard = [CPPasteboard generalPasteboard],
-            stringForPasting = [_stringValue substringWithRange:selectedRange];
+            stringValue = [self stringValue],
+            stringForPasting = [stringValue substringWithRange:selectedRange];
 
         [pasteboard declareTypes:[CPStringPboardType] owner:nil];
         [pasteboard setString:stringForPasting forType:CPStringPboardType];
@@ -1108,8 +1051,9 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         [self deleteBackward:sender];
 
         var selectedRange = [self selectedRange],
+            stringValue = [self stringValue],
             pasteString = [pasteboard stringForType:CPStringPboardType],
-            newValue = [_stringValue stringByReplacingCharactersInRange:selectedRange withString:pasteString];
+            newValue = [stringValue stringByReplacingCharactersInRange:selectedRange withString:pasteString];
 
         [self setStringValue:newValue];
         [self setSelectedRange:CPMakeRange(selectedRange.location + pasteString.length, 0)];
@@ -1122,8 +1066,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 {
     if ([[self window] firstResponder] !== self)
         return CPMakeRange(0, 0);
-
-#if PLATFORM(DOM)
 
     // we wrap this in try catch because firefox will throw an exception in certain instances
     try
@@ -1151,8 +1093,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
         // fall through to the return
     }
 
-#endif
-
     return CPMakeRange(0, 0);
 }
 
@@ -1160,8 +1100,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
 {
     if (![[self window] firstResponder] === self)
         return;
-
-#if PLATFORM(DOM)
 
     var inputElement = [self _inputElement];
 
@@ -1191,8 +1129,6 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     catch (e)
     {
     }
-
-#endif
 }
 
 - (void)selectAll:(id)sender
@@ -1210,7 +1146,8 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
     selectedRange.location += 1;
     selectedRange.length -= 1;
 
-    var newValue = [_stringValue stringByReplacingCharactersInRange:selectedRange withString:""];
+    var stringValue = [self stringValue],
+        newValue = [stringValue stringByReplacingCharactersInRange:selectedRange withString:""];
 
     [self setStringValue:newValue];
     [self setSelectedRange:CPMakeRange(selectedRange.location, 0)];
@@ -1363,7 +1300,7 @@ CPTextFieldStatePlaceholder = CPThemeState("placeholder");
             string = [self placeholderString];
         else
         {
-            string = _stringValue;
+            string = [self stringValue];
 
             if ([self isSecure])
                 string = secureStringForString(string);
