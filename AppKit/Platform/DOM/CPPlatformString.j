@@ -179,7 +179,15 @@ var DOMFixedWidthSpanElement    = nil,
     else if (CPFeatureIsCompatible(CPJavaScriptTextContentFeature))
         span.textContent = aString;
 
-    return _CGSizeMake(span.clientWidth, span.clientHeight);
+    var size = _CGSizeMake(span.clientWidth, span.clientHeight);
+
+    // IE will sometimes return a size that should fit the text
+    // but still truncate it. Prevent this behavior by always adding
+    // 1px to the size on IE
+    if (CPBrowserIsEngine(CPInternetExplorerBrowserEngine))
+        size.width += 1.0;
+
+    return size;
 }
 
 + (CPDictionary)metricsOfFont:(CPFont)aFont
