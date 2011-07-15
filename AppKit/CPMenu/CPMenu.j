@@ -627,9 +627,10 @@ var _CPMenuBarVisible               = NO,
             [item _setEnabled:[validator validateMenuItem:item]];
         else if ([validator respondsToSelector:@selector(validateUserInterfaceItem:)])
             [item _setEnabled:[validator validateUserInterfaceItem:item]];
-    }
 
-    [[_menuWindow _menuView] tile];
+        if ([[item _menuItemView] isDirty])
+            [[item _menuItemView] synchronizeWithMenuItem];
+    }
 }
 
 // Managing the Title
