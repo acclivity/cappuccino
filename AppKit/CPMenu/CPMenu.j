@@ -690,10 +690,11 @@ var _CPMenuBarVisible               = NO,
                                topY:aLocation.y
                             bottomY:aLocation.y
                              inView:aView
+                               font:aFont
                            callback:aCallback];
 }
 
-- (void)_popUpMenuPositioningItem:(CPMenuItem)anItem atLocation:(CGPoint)aLocation topY:(float)aTopY bottomY:(float)aBottomY inView:(CPView)aView callback:(Function)aCallback
+- (void)_popUpMenuPositioningItem:(CPMenuItem)anItem atLocation:(CGPoint)aLocation topY:(float)aTopY bottomY:(float)aBottomY inView:(CPView)aView font:(CPFont)aFont callback:(Function)aCallback
 {
     var itemIndex = 0;
 
@@ -718,7 +719,7 @@ var _CPMenuBarVisible               = NO,
         aLocation = [theWindow convertBaseToGlobal:[aView convertPoint:aLocation toView:nil]];
 
     // Create the window for our menu.
-    var menuWindow = [_CPMenuWindow menuWindowWithMenu:self font:[self font]];
+    var menuWindow = [_CPMenuWindow menuWindowWithMenu:self font:aFont ? aFont : [self font]];
 
     [menuWindow setBackgroundStyle:_CPMenuWindowPopUpBackgroundStyle];
 
@@ -799,49 +800,16 @@ var _CPMenuBarVisible               = NO,
 
 + (void)popUpContextMenu:(CPMenu)aMenu withEvent:(CPEvent)anEvent forView:(CPView)aView withFont:(CPFont)aFont
 {
-    [aMenu _menuWillOpen];
+    var item = [[aMenu itemArray] firstObject],
+        location = [aView convertPoint:[anEvent locationInWindow] fromView:nil];
 
-    if (!aFont)
-        aFont = [CPFont systemFontOfSize:12.0];
-
-    var theWindow = [aView window],
-        menuWindow = [_CPMenuWindow menuWindowWithMenu:aMenu font:aFont];
-
-    [menuWindow setBackgroundStyle:_CPMenuWindowPopUpBackgroundStyle];
-
-    var constraintRect = [CPMenu _constraintRectForView:aView],
-        aLocation = [[anEvent window] convertBaseToGlobal:[anEvent locationInWindow]];
-
-    [menuWindow setConstraintRect:constraintRect];
-    [menuWindow setFrameOrigin:aLocation];
-
-    // If we aren't showing enough items, reposition the view in a better place.
-    if (![menuWindow hasMinimumNumberOfVisibleItems])
-    {
-        var unconstrainedFrame = [menuWindow unconstrainedFrame],
-            unconstrainedY = CGRectGetMinY(unconstrainedFrame);
-
-        // If we scroll to early downwards, or are offscreen (!), move it up.
-        if (unconstrainedY >= CGRectGetMaxY(constraintRect) || [menuWindow canScrollDown])
-            unconstrainedFrame.origin.y = MIN(CGRectGetMaxY(constraintRect), aLocation.y) - CGRectGetHeight(unconstrainedFrame);
-
-        // If we scroll to early upwards, or are offscreen (!), move it down.
-        else if (unconstrainedY < CGRectGetMinY(constraintRect) || [menuWindow canScrollUp])
-            unconstrainedFrame.origin.y = MAX(CGRectGetMinY(constraintRect), aLocation.y);
-
-        [menuWindow setFrameOrigin:CGRectIntersection(unconstrainedFrame, constraintRect).origin];
-    }
-
-    if ([CPPlatform isBrowser])
-        [menuWindow setPlatformWindow:[[aView window] platformWindow]];
-
-    [menuWindow orderFront:self];
-
-    [[_CPMenuManager sharedMenuManager]
-        beginTracking:anEvent
-        menuContainer:menuWindow
-       constraintRect:[CPMenu _constraintRectForView:aView]
-             callback:[CPMenu trackingCallbackWithCallback:nil]];
+    [aMenu _popUpMenuPositioningItem:item
+                          atLocation:location
+                                topY:location.y
+                             bottomY:location.y
+                              inView:aView
+                                font:aFont
+                            callback:nil];
 }
 
 // Managing Display of State Column
