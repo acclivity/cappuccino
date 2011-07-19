@@ -525,7 +525,6 @@ var STICKY_TIME_INTERVAL        = 500,
 
         [view setFont:_font];
         [view setShowsStateColumn:showsStateColumn];
-        [view synchronizeWithMenuItem];
 
         [view setFrameOrigin:CGPointMake(0.0, y)];
 
