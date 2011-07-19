@@ -58,7 +58,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
 + (id)view
 {
-    return [[self alloc] init];
+    return [[self alloc] initWithFrame:CGRectMakeZero()];
 }
 
 + (float)_standardLeftMargin
