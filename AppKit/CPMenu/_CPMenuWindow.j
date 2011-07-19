@@ -215,7 +215,6 @@ var STICKY_TIME_INTERVAL        = 500,
 
 - (void)orderFront:(id)aSender
 {
-    [[self menu] update];
     [self setFrame:_unconstrainedFrame];
 
     [super orderFront:aSender];

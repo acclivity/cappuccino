@@ -86,6 +86,11 @@ var _CPMenuItemSelectionColor                   = nil,
     return _minSize;
 }
 
+- (BOOL)isDirty
+{
+    return _isDirty;
+}
+
 - (void)setDirty
 {
     _isDirty = YES;

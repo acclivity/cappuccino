@@ -627,9 +627,10 @@ var _CPMenuBarVisible               = NO,
             [item _setEnabled:[validator validateMenuItem:item]];
         else if ([validator respondsToSelector:@selector(validateUserInterfaceItem:)])
             [item _setEnabled:[validator validateUserInterfaceItem:item]];
-    }
 
-    [[_menuWindow _menuView] tile];
+        if ([[item _menuItemView] isDirty])
+            [[item _menuItemView] synchronizeWithMenuItem];
+    }
 }
 
 // Managing the Title
@@ -712,6 +713,7 @@ var _CPMenuBarVisible               = NO,
     if (aView && !theWindow)
         throw "In call to popUpMenuPositioningItem:atLocation:inView:callback:, view is not in any window.";
 
+    [self update];
     [self _menuWillOpen];
 
     // Convert location to global coordinates if not already in them.
@@ -789,6 +791,7 @@ var _CPMenuBarVisible               = NO,
         if (aCallback)
             aCallback(aMenu);
 
+        [aMenu _menuDidClose];
         [aMenu _performActionOfHighlightedItemChain];
     }
 }
