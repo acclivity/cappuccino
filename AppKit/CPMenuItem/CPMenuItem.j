@@ -137,6 +137,8 @@ var CPMenuItemStringRepresentationDictionary = [CPDictionary dictionary];
         _indentationLevel = 0;
 
         _mnemonicLocation = CPNotFound;
+
+        _menuItemView = [[_CPMenuItemView alloc] initWithFrame:CGRectMakeZero() forMenuItem:self];
     }
 
     return self;
@@ -865,9 +867,6 @@ CPControlKeyMask
 */
 - (id)_menuItemView
 {
-    if (!_menuItemView)
-        _menuItemView = [[_CPMenuItemView alloc] initWithFrame:CGRectMakeZero() forMenuItem:self];
-
     return _menuItemView;
 }
 
@@ -935,6 +934,8 @@ var CPMenuItemIsSeparatorKey                = @"CPMenuItemIsSeparatorKey",
         _title = [aCoder decodeObjectForKey:CPMenuItemTitleKey];
 
 //        _font;
+
+        _menuItemView = [[_CPMenuItemView alloc] initWithFrame:CGRectMakeZero() forMenuItem:self];
 
         _target = [aCoder decodeObjectForKey:CPMenuItemTargetKey];
         _action = [aCoder decodeObjectForKey:CPMenuItemActionKey];

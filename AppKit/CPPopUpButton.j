@@ -709,6 +709,7 @@ CPPopUpButtonStatePullsDown = CPThemeState("pulls-down");
                              topY:CGRectGetMinY(bounds)
                           bottomY:CGRectGetMaxY(bounds)
                            inView:self
+                             font:nil
                          callback:function(aMenu)
         {
             [self highlight:NO];

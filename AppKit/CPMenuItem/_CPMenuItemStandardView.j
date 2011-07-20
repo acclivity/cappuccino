@@ -6,14 +6,14 @@ var LEFT_MARGIN                 = 5.0,
     STATE_COLUMN_WIDTH          = 14.0,
     INDENTATION_WIDTH           = 17.0,
     VERTICAL_MARGIN             = 4.0,
-    
+
     RIGHT_COLUMNS_MARGIN        = 30.0,
     KEY_EQUIVALENT_MARGIN       = 10.0;
 
 var SUBMENU_INDICATOR_COLOR                     = nil,
     _CPMenuItemSelectionColor                   = nil,
     _CPMenuItemTextShadowColor                  = nil,
-    
+
     _CPMenuItemDefaultStateImages               = [],
     _CPMenuItemDefaultStateHighlightedImages    = [];
 
@@ -45,9 +45,9 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
     _CPMenuItemSelectionColor =  [CPColor colorWithCalibratedRed:87.0 / 255.0 green:127.0 / 255.0 blue:215.0 / 255.0 alpha:1.0];
     _CPMenuItemTextShadowColor = [CPColor colorWithWhite:0.0 alpha:0.15];
-    
+
     var bundle = [CPBundle bundleForClass:self];
-    
+
     _CPMenuItemDefaultStateImages[CPOffState]               = nil;
     _CPMenuItemDefaultStateHighlightedImages[CPOffState]    = nil;
 
@@ -60,7 +60,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
 + (id)view
 {
-    return [[self alloc] init];
+    return [[self alloc] initWithFrame:CGRectMakeZero()];
 }
 
 + (float)_standardLeftMargin
@@ -183,7 +183,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
         [_keyEquivalentView setTextShadowOffset:CGSizeMake(0, 1)];
         [_keyEquivalentView setFrameOrigin:CGPointMake(x, VERTICAL_MARGIN)];
         [_keyEquivalentView sizeToFit];
-        
+
         var keyEquivalentViewFrame = [_keyEquivalentView frame];
 
         keyEquivalentViewFrame.origin.x = CGRectGetWidth([_contentView bounds]) - CGRectGetWidth(keyEquivalentViewFrame) - 7.0;
@@ -223,15 +223,19 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
         keyEquivalentViewFrame.origin.y = FLOOR((height - CGRectGetHeight(keyEquivalentViewFrame)) / 2.0);
         [_keyEquivalentView setFrame:keyEquivalentViewFrame];
     }
-    
+
     if (hasSubmenu)
     {
         submenuViewFrame.origin.y = FLOOR((height - CGRectGetHeight(submenuViewFrame)) / 2.0);
         [_submenuIndicatorView setFrame:submenuViewFrame];
+
+        // Force display because the submenu indicator isn't drawn
+        // when the menu is opened for the first time
+        [_submenuIndicatorView setNeedsDisplay:YES];
     }
 
     _minSize = CGSizeMake(x + RIGHT_MARGIN, height);
-    
+
     [self setAutoresizesSubviews:NO];
     [self setFrameSize:_minSize];
     [self setAutoresizesSubviews:YES];
@@ -245,7 +249,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 {
     // FIXME: This should probably be even throw.
     if (![_menuItem isEnabled])
-        return; 
+        return;
 
     if (shouldHighlight)
     {
@@ -271,7 +275,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
         [_imageAndTextView setTextShadowColor:[self textShadowColor]];
         [_keyEquivalentView setTextShadowColor:[self textShadowColor]];
     }
-    
+
     if ([[_menuItem menu] showsStateColumn])
     {
         if (shouldHighlight)
@@ -302,17 +306,17 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 {
     var context = [[CPGraphicsContext currentContext] graphicsPort],
         bounds = [self bounds];
-    
+
     bounds.size.height -= 1.0;
-    
+
     CGContextBeginPath(context);
-    
+
     CGContextMoveToPoint(context, CGRectGetMinX(bounds), CGRectGetMinY(bounds));
     CGContextAddLineToPoint(context, CGRectGetMaxX(bounds), CGRectGetMidY(bounds));
     CGContextAddLineToPoint(context, CGRectGetMinX(bounds), CGRectGetMaxY(bounds));
-    
+
     CGContextClosePath(context);
-    
+
     CGContextSetFillColor(context, _color);
     CGContextFillPath(context);
 }
