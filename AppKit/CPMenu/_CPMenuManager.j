@@ -385,6 +385,7 @@ var STICKY_TIME_INTERVAL            = 500,
     var count = _menuContainerStack.length,
         index = count;
 
+    [newMenu update];
     [newMenu _menuWillOpen];
 
     // Hide all menus up to the base menu...
