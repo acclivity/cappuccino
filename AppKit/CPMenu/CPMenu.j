@@ -691,7 +691,7 @@ var _CPMenuBarVisible               = NO,
                                topY:aLocation.y
                             bottomY:aLocation.y
                              inView:aView
-                               font:aFont
+                               font:nil
                            callback:aCallback];
 }
 
