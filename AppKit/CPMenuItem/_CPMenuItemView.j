@@ -74,7 +74,6 @@ var _CPMenuItemSelectionColor                   = nil,
         _isDirty = YES;
 
         [self setAutoresizingMask:CPViewWidthSizable];
-
         [self synchronizeWithMenuItem];
     }
 
@@ -117,7 +116,7 @@ var _CPMenuItemSelectionColor                   = nil,
         }
     }
 
-    else if ([_menuItem menu] == [CPApp mainMenu])
+    else if ([_menuItem menu] === [CPApp mainMenu])
     {
         if (![_view isKindOfClass:[_CPMenuItemMenuBarView class]])
         {
@@ -152,7 +151,11 @@ var _CPMenuItemSelectionColor                   = nil,
 
 - (void)setShowsStateColumn:(BOOL)shouldShowStateColumn
 {
+    if (_showsStateColumn === shouldShowStateColumn)
+        return;
+
     _showsStateColumn = shouldShowStateColumn;
+    [self setDirty];
 }
 
 - (void)highlight:(BOOL)shouldHighlight
@@ -194,7 +197,7 @@ var _CPMenuItemSelectionColor                   = nil,
 
 - (void)setTextColor:(CPColor)aColor
 {
-    if (_textColor == aColor)
+    if (_textColor === aColor)
         return;
 
     _textColor = aColor;
@@ -210,7 +213,7 @@ var _CPMenuItemSelectionColor                   = nil,
 
 - (void)setTextShadowColor:(CPColor)aColor
 {
-    if (_textShadowColor == aColor)
+    if (_textShadowColor === aColor)
         return;
 
     _textShadowColor = aColor;

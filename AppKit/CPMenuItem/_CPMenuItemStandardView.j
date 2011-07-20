@@ -220,6 +220,10 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     {
         submenuViewFrame.origin.y = FLOOR((height - CGRectGetHeight(submenuViewFrame)) / 2.0);
         [_submenuIndicatorView setFrame:submenuViewFrame];
+
+        // Force display because the submenu indicator isn't drawn
+        // when the menu is opened for the first time
+        [_submenuIndicatorView setNeedsDisplay:YES];
     }
 
     _minSize = CGSizeMake(x + RIGHT_MARGIN, height);

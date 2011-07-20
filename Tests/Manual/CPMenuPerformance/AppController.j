@@ -22,6 +22,9 @@
     var popUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMakeZero()];
 
     [popUpButton setMenu:[self _createMenuWithTitle:@"Popup"]];
+    [[popUpButton itemAtIndex:1] setSubmenu:[self _createMenuWithTitle:@"Submenu 1"]];
+    [[popUpButton itemAtIndex:2] setSubmenu:[self _createMenuWithTitle:@"Submenu 2"]];
+    [[popUpButton itemAtIndex:3] setSubmenu:[self _createMenuWithTitle:@"Submenu 3"]];
     [popUpButton sizeToFit];
 
     [popUpButton setFrameSize:CGSizeMake(100.0, CGRectGetHeight([popUpButton bounds]))];
