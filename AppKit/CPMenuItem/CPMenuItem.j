@@ -935,6 +935,8 @@ var CPMenuItemIsSeparatorKey                = @"CPMenuItemIsSeparatorKey",
 
 //        _font;
 
+        _menuItemView = [[_CPMenuItemView alloc] initWithFrame:CGRectMakeZero() forMenuItem:self];
+
         _target = [aCoder decodeObjectForKey:CPMenuItemTargetKey];
         _action = [aCoder decodeObjectForKey:CPMenuItemActionKey];
 
