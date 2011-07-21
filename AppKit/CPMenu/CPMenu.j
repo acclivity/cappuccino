@@ -622,11 +622,12 @@ var _CPMenuBarVisible               = NO,
         var validator = [CPApp targetForAction:[item action] to:[item target] from:item];
 
         if (!validator || ![validator respondsToSelector:[item action]])
-            [item _setEnabled:NO];
+            [item setEnabled:NO];
         else if ([validator respondsToSelector:@selector(validateMenuItem:)])
-            [item _setEnabled:[validator validateMenuItem:item]];
+            [item setEnabled:[validator validateMenuItem:item]];
         else if ([validator respondsToSelector:@selector(validateUserInterfaceItem:)])
-            [item _setEnabled:[validator validateUserInterfaceItem:item]];
+            [item setEnabled:[validator validateUserInterfaceItem:item]];
+    }
 
         if ([[item _menuItemView] isDirty])
             [[item _menuItemView] synchronizeWithMenuItem];
