@@ -63,54 +63,20 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     return [[self alloc] initWithFrame:CGRectMakeZero()];
 }
 
-+ (float)_standardLeftMargin
+- (id)initWithFrame:(CGRect)theFrame
 {
-    return LEFT_MARGIN + STATE_COLUMN_WIDTH + (VERTICAL_MARGIN / 2.0);
-}
-
-- (id)initWithFrame:(CGRect)aFrame
-{
-    self = [super initWithFrame:aFrame];
-
-    if (self)
+    if (self = [super initWithFrame:theFrame])
     {
-        _contentView = [[CPView alloc] initWithFrame:CGRectInset([self bounds], 7.0, 0.0)];
-        [_contentView setBackgroundColor:nil];
-        [self addSubview:_contentView];
-
-        _stateView = [[CPImageView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
-
-        [_stateView setImageScaling:CPScaleNone];
-
-        [_contentView addSubview:_stateView];
-
-        _imageAndTextView = [[_CPImageAndTextView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
-
-        [_imageAndTextView setImagePosition:CPImageLeft];
-        [_imageAndTextView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
-
-        [_contentView addSubview:_imageAndTextView];
-
-        _keyEquivalentView = [[_CPImageAndTextView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
-
-        [_keyEquivalentView setImagePosition:CPNoImage];
-        [_keyEquivalentView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
-        [_keyEquivalentView setAutoresizingMask:CPViewMinXMargin];
-
-        [_contentView addSubview:_keyEquivalentView];
-
-        _submenuIndicatorView = [[_CPMenuItemSubmenuIndicatorView alloc] initWithFrame:CGRectMake(0.0, 0.0, 5.0, 8.0)];
-
-        [_submenuIndicatorView setColor:SUBMENU_INDICATOR_COLOR];
-        [_submenuIndicatorView setAutoresizingMask:CPViewMinXMargin];
-
-        [_contentView addSubview:_submenuIndicatorView];
-
         [self setAutoresizingMask:CPViewWidthSizable];
-        [_contentView setAutoresizingMask:CPViewWidthSizable]
+        [[self _contentView] setAutoresizingMask:CPViewWidthSizable]
     }
 
     return self;
+}
+
++ (float)_standardLeftMargin
+{
+    return LEFT_MARGIN + STATE_COLUMN_WIDTH + (VERTICAL_MARGIN / 2.0);
 }
 
 - (CPColor)textColor
@@ -142,25 +108,31 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
     if (hasStateColumn)
     {
-        [_stateView setHidden:NO];
-        [_stateView setImage:_CPMenuItemDefaultStateImages[[_menuItem state]] || nil];
+        var stateView = [self _stateView];
+
+        [stateView setHidden:NO];
+        [stateView setImage:_CPMenuItemDefaultStateImages[[_menuItem state]] || nil];
 
         x += STATE_COLUMN_WIDTH;
     }
     else
+    {
+        // Don't use the accessor to make sure the view isn't lazily unnecessarily instantiated
         [_stateView setHidden:YES];
+    }
 
-    [_imageAndTextView setFont:[_menuItem font] || _font];
-    [_imageAndTextView setVerticalAlignment:CPCenterVerticalTextAlignment];
-    [_imageAndTextView setImage:[_menuItem image]];
-    [_imageAndTextView setImageOffset:5.0]; // Should be themeable
-    [_imageAndTextView setText:[_menuItem title]];
-    [_imageAndTextView setTextColor:[self textColor]];
-    [_imageAndTextView setTextShadowColor:[self textShadowColor]];
-    [_imageAndTextView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
-    [_imageAndTextView sizeToFit];
+    var imageAndTextView = [self _imageAndTextView];
+    [imageAndTextView setFont:[_menuItem font] || _font];
+    [imageAndTextView setVerticalAlignment:CPCenterVerticalTextAlignment];
+    [imageAndTextView setImage:[_menuItem image]];
+    [imageAndTextView setImageOffset:5.0]; // Should be themeable
+    [imageAndTextView setText:[_menuItem title]];
+    [imageAndTextView setTextColor:[self textColor]];
+    [imageAndTextView setTextShadowColor:[self textShadowColor]];
+    [imageAndTextView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
+    [imageAndTextView sizeToFit];
 
-    var imageAndTextViewFrame = [_imageAndTextView frame];
+    var imageAndTextViewFrame = [imageAndTextView frame];
 
     imageAndTextViewFrame.origin.x = x;
     x += CGRectGetWidth(imageAndTextViewFrame);
@@ -174,19 +146,21 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
     if (hasKeyEquivalent)
     {
-        [_keyEquivalentView setFont:[_menuItem font] || _font];
-        [_keyEquivalentView setVerticalAlignment:CPCenterVerticalTextAlignment];
-        [_keyEquivalentView setImage:[_menuItem image]];
-        [_keyEquivalentView setText:[_menuItem keyEquivalentStringRepresentation]];
-        [_keyEquivalentView setTextColor:[self textColor]];
-        [_keyEquivalentView setTextShadowColor:[self textShadowColor]];
-        [_keyEquivalentView setTextShadowOffset:CGSizeMake(0, 1)];
-        [_keyEquivalentView setFrameOrigin:CGPointMake(x, VERTICAL_MARGIN)];
-        [_keyEquivalentView sizeToFit];
+        var keyEquivalentView = [self _keyEquivalentView];
 
-        var keyEquivalentViewFrame = [_keyEquivalentView frame];
+        [keyEquivalentView setFont:[_menuItem font] || _font];
+        [keyEquivalentView setVerticalAlignment:CPCenterVerticalTextAlignment];
+        [keyEquivalentView setImage:[_menuItem image]];
+        [keyEquivalentView setText:[_menuItem keyEquivalentStringRepresentation]];
+        [keyEquivalentView setTextColor:[self textColor]];
+        [keyEquivalentView setTextShadowColor:[self textShadowColor]];
+        [keyEquivalentView setTextShadowOffset:CGSizeMake(0, 1)];
+        [keyEquivalentView setFrameOrigin:CGPointMake(x, VERTICAL_MARGIN)];
+        [keyEquivalentView sizeToFit];
 
-        keyEquivalentViewFrame.origin.x = CGRectGetWidth([_contentView bounds]) - CGRectGetWidth(keyEquivalentViewFrame) - 7.0;
+        var keyEquivalentViewFrame = [keyEquivalentView frame];
+
+        keyEquivalentViewFrame.origin.x = CGRectGetWidth([[self _contentView] bounds]) - CGRectGetWidth(keyEquivalentViewFrame) - 7.0;
         x += CGRectGetWidth(keyEquivalentViewFrame);
         height = MAX(height, CGRectGetHeight(keyEquivalentViewFrame));
 
@@ -194,44 +168,44 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
             x += RIGHT_COLUMNS_MARGIN;
     }
     else
+    {
+        // Don't use the accessor to make sure the view isn't lazily unnecessarily instantiated
         [_keyEquivalentView setHidden:YES];
+    }
+
+    height += 2.0 * VERTICAL_MARGIN;
 
     if (hasSubmenu)
     {
-        [_submenuIndicatorView setHidden:NO];
+        var submenuIndicatorView = [self _submenuIndicatorView],
+            submenuViewFrame = [submenuIndicatorView frame];
 
-        var submenuViewFrame = [_submenuIndicatorView frame];
+        [submenuIndicatorView setHidden:NO];
 
-        submenuViewFrame.origin.x = CGRectGetWidth([_contentView bounds]) - CGRectGetWidth(submenuViewFrame) - 7.0;
+        submenuViewFrame.origin.x = CGRectGetWidth([[self _contentView] bounds]) - CGRectGetWidth(submenuViewFrame) - 7.0;
+        submenuViewFrame.origin.y = FLOOR((height - CGRectGetHeight(submenuViewFrame)) / 2.0);
+
+        [_submenuIndicatorView setFrame:submenuViewFrame];
 
         x += CGRectGetWidth(submenuViewFrame);
         height = MAX(height, CGRectGetHeight(submenuViewFrame));
     }
     else
+    {
+        // Don't use the accessor to make sure the view isn't lazily unnecessarily instantiated
         [_submenuIndicatorView setHidden:YES];
-
-    height += 2.0 * VERTICAL_MARGIN;
+    }
 
     imageAndTextViewFrame.origin.y = FLOOR((height - CGRectGetHeight(imageAndTextViewFrame)) / 2.0);
-    [_imageAndTextView setFrame:imageAndTextViewFrame];
+    [imageAndTextView setFrame:imageAndTextViewFrame];
 
     if (hasStateColumn)
-        [_stateView setFrameSize:CGSizeMake(STATE_COLUMN_WIDTH, height)];
+        [[self _stateView] setFrameSize:CGSizeMake(STATE_COLUMN_WIDTH, height)];
 
     if (hasKeyEquivalent)
     {
         keyEquivalentViewFrame.origin.y = FLOOR((height - CGRectGetHeight(keyEquivalentViewFrame)) / 2.0);
-        [_keyEquivalentView setFrame:keyEquivalentViewFrame];
-    }
-
-    if (hasSubmenu)
-    {
-        submenuViewFrame.origin.y = FLOOR((height - CGRectGetHeight(submenuViewFrame)) / 2.0);
-        [_submenuIndicatorView setFrame:submenuViewFrame];
-
-        // Force display because the submenu indicator isn't drawn
-        // when the menu is opened for the first time
-        [_submenuIndicatorView setNeedsDisplay:YES];
+        [[self _keyEquivalentView] setFrame:keyEquivalentViewFrame];
     }
 
     _minSize = CGSizeMake(x + RIGHT_MARGIN, height);
@@ -241,7 +215,7 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     [self setAutoresizesSubviews:YES];
 
     [self setAutoresizesSubviews:NO];
-    [_contentView setFrame:CGRectInset([self bounds], 2.0, 0.0)];
+    [[self _contentView] setFrame:CGRectInset([self bounds], 2.0, 0.0)];
     [self setAutoresizesSubviews:YES];
 }
 
@@ -253,8 +227,9 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
 
     if (shouldHighlight)
     {
-        [_contentView setBackgroundColor:_CPMenuItemSelectionColor];
+        [[self _contentView] setBackgroundColor:_CPMenuItemSelectionColor];
 
+        // Don't use the accessor to make sure the view isn't lazily unnecessarily instantiated
         [_imageAndTextView setImage:[_menuItem alternateImage] || [_menuItem image]];
         [_imageAndTextView setTextColor:[CPColor whiteColor]];
         [_keyEquivalentView setTextColor:[CPColor whiteColor]];
@@ -265,8 +240,9 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     }
     else
     {
-        [_contentView setBackgroundColor:nil];
+        [[self _contentView] setBackgroundColor:nil];
 
+        // Don't use the accessor to make sure the view isn't lazily unnecessarily instantiated
         [_imageAndTextView setImage:[_menuItem image]];
         [_imageAndTextView setTextColor:[self textColor]];
         [_keyEquivalentView setTextColor:[self textColor]];
@@ -279,10 +255,76 @@ var SUBMENU_INDICATOR_COLOR                     = nil,
     if ([[_menuItem menu] showsStateColumn])
     {
         if (shouldHighlight)
-            [_stateView setImage:_CPMenuItemDefaultStateHighlightedImages[[_menuItem state]] || nil];
+            [[self _stateView] setImage:_CPMenuItemDefaultStateHighlightedImages[[_menuItem state]] || nil];
         else
-            [_stateView setImage:_CPMenuItemDefaultStateImages[[_menuItem state]] || nil];
+            [[self _stateView] setImage:_CPMenuItemDefaultStateImages[[_menuItem state]] || nil];
     }
+}
+
+- (CPView)_contentView
+{
+    if (!_contentView)
+    {
+        _contentView = [[CPView alloc] initWithFrame:CGRectInset([self bounds], 7.0, 0.0)];
+        [_contentView setBackgroundColor:nil];
+        [self addSubview:_contentView];
+    }
+
+    return _contentView;
+}
+
+- (CPView)_stateView
+{
+    if (!_stateView)
+    {
+        _stateView = [[CPImageView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
+        [_stateView setImageScaling:CPScaleNone];
+        [[self _contentView] addSubview:_stateView];
+    }
+
+    return _stateView;
+}
+
+- (_CPImageAndTextView)_imageAndTextView
+{
+    if (!_imageAndTextView)
+    {
+        _imageAndTextView = [[_CPImageAndTextView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
+        [_imageAndTextView setImagePosition:CPImageLeft];
+        [_imageAndTextView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
+        [[self _contentView] addSubview:_imageAndTextView];
+    }
+
+    return _imageAndTextView;
+}
+
+- (_CPImageAndTextView)_keyEquivalentView
+{
+    if (!_keyEquivalentView)
+    {
+        _keyEquivalentView = [[_CPImageAndTextView alloc] initWithFrame:CGRectMake(0.0, 0.0, 0.0, 0.0)];
+
+        [_keyEquivalentView setImagePosition:CPNoImage];
+        [_keyEquivalentView setTextShadowOffset:CGSizeMake(0.0, 1.0)];
+        [_keyEquivalentView setAutoresizingMask:CPViewMinXMargin];
+
+        [[self _contentView] addSubview:_keyEquivalentView];
+    }
+
+    return _keyEquivalentView;
+}
+
+- (_CPMenuItemSubmenuIndicatorView)_submenuIndicatorView
+{
+    if (!_submenuIndicatorView)
+    {
+        _submenuIndicatorView = [[_CPMenuItemSubmenuIndicatorView alloc] initWithFrame:CGRectMake(0.0, 0.0, 5.0, 8.0)];
+        [_submenuIndicatorView setColor:SUBMENU_INDICATOR_COLOR];
+        [_submenuIndicatorView setAutoresizingMask:CPViewMinXMargin];
+        [[self _contentView] addSubview:_submenuIndicatorView];
+    }
+
+    return _submenuIndicatorView;
 }
 
 @end
