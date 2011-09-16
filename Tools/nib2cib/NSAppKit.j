@@ -67,6 +67,7 @@
 @import "NSTabView.j"
 @import "NSTabViewItem.j"
 @import "NSTextField.j"
+@import "NSTokenField.j"
 @import "NSToolbar.j"
 @import "NSToolbarFlexibleSpaceItem.j"
 @import "NSToolbarItem.j"
@@ -79,6 +80,7 @@
 @import "NSWindowTemplate.j"
 @import "WebView.j"
 @import "NSSortDescriptor.j"
+@import "NSPopover.j"
 
 
 function CP_NSMapClassName(aClassName)

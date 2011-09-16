@@ -1,5 +1,5 @@
 /*
- * NSFoundation.j
+ * NSPopover.j
  * nib2cib
  *
  * Created by Francisco Tolmasky.
@@ -20,10 +20,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-@import "NSArray.j"
-@import "NSAttributedString.j"
-@import "NSDictionary.j"
-@import "NSExpression.j"
-@import "NSMutableString.j"
-@import "NSSet.j"
+@import <AppKit/CPPopover.j>
 
+
+@implementation CPPopover (NSCoding)
+
+- (id)NS_initWithCoder:(CPCoder)aCoder
+{
+    self = [super NS_initWithCoder:aCoder];
+
+    if (self)
+    {   
+        _needsCompute   = YES;
+        _shown          = NO;
+        _behavior       = [aCoder decodeIntForKey:@"NSBehavior"];
+        _appearance     = [aCoder decodeIntForKey:@"NSAppearance"];
+        _animates       = [aCoder decodeBoolForKey:@"NSAnimates"];
+    }
+
+    return self;
+}
+
+@end
+
+@implementation NSPopover : CPPopover
+
+- (id)initWithCoder:(CPCoder)aCoder
+{
+    return [self NS_initWithCoder:aCoder];
+}
+
+- (Class)classForKeyedArchiver
+{
+    return [CPPopover class];
+}
+
+@end
